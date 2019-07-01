@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Authors>Ryzhehvost</Authors>
+    <AssemblyVersion>0.1</AssemblyVersion>
+    <TargetFrameworks>netcoreapp2.2;net472</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Composition.AttributedModel" Version="1.3.0-preview5.19224.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ArchiSteamFarm\ArchiSteamFarm\ArchiSteamFarm.csproj" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="mkdir $(TargetDir)ASFAchievementManager&#xD;&#xA;copy $(TargetPath) $(TargetDir)ASFAchievementManager\&#xD;&#xA;7z a -tzip -mx7  ASF-Achievement-Manager.zip $(TargetDir)ASFAchievementManager" />
+  </Target>
+
+</Project>
