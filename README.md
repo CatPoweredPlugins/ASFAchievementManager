@@ -15,21 +15,21 @@ This plugin for [ASF](https://github.com/JustArchiNET/ArchiSteamFarm/) allows yo
 After installation, you can use those commands (only for accounts with Master+ permissions):
 
 ### `alist <bots> <appids>`
-Displays current status of achievements in specified games on given bots. You can specify multiple bots and multiple appids.
-Example of output:
-![alist output example](https://i.imgur.com/IiRnH81.png)
+Displays current status of achievements in specified games on given bots. You can specify multiple bots and multiple appids.<br/>
+Example of output:<br/>
+![alist output example](https://i.imgur.com/IiRnH81.png)<br/>
 Unlocked achievements are marked as ✅, still locked as ❌. If achievement has mark ⚠️ next to it - it means this achievement is server-side, and can't be switched with this plugin.
   
 ### `aset <bots> <appid> <achievements>`
-Sets (unlocks) achievements with specified numbers in provided appid on given bots. Please note that, unlike `alist`, you can provide only one appid here. Achievement numbers corresponds to the ones showed by `alist` command. You can provide `*` instead of achievements list to set all available achievements.
-Examples:
-  `aset bot1 370910 1,2,5`
+Sets (unlocks) achievements with specified numbers in provided appid on given bots. Please note that, unlike `alist`, you can provide only one appid here. Achievement numbers corresponds to the ones showed by `alist` command. You can provide `*` instead of achievements list to set all available achievements.<br/>
+Examples:<br/>
+  `aset bot1 370910 1,2,5`<br/>
   `aset bot1 370910 *`
   
 ### `areset <bots> <appid> <achievements>`
-Resets (locks) achievements with specified numbers in provided appid on given bots. Please note that, unlike `alist`, you can provide only one appid here. Achievement numbers corresponds to the ones showed by `alist` command. You can provide `*` instead of achievements list to reset all available achievements.
-Examples:
-  `areset bot1 370910 1,2,5`
+Resets (locks) achievements with specified numbers in provided appid on given bots. Please note that, unlike `alist`, you can provide only one appid here. Achievement numbers corresponds to the ones showed by `alist` command. You can provide `*` instead of achievements list to reset all available achievements.<br/>
+Examples:<br/>
+  `areset bot1 370910 1,2,5`<br/>
   `areset bot1 370910 *`
 
 ---
@@ -51,21 +51,21 @@ Examples:
 После установки, вы можете использовать следующие команды (только с аккаунта с правами Master+):
 
 ### `alist <bots> <appids>`
-Отображает список и текущее состояние достижений в указанных играх для заданных ботов. Вы можете указать нескольких ботов и несколько appid.
-Пример работы программы:
-![пример работы alist](https://i.imgur.com/IiRnH81.png)
+Отображает список и текущее состояние достижений в указанных играх для заданных ботов. Вы можете указать нескольких ботов и несколько appid.<br/>
+Пример работы программы:<br/>
+![пример работы alist](https://i.imgur.com/IiRnH81.png)<br/>
 Открытые достижения отмечены как ✅, ещё закрытые - как ❌. Если рядом с достижением стоит отметка ⚠️ - это означает что это серверное достижение, и его состояние невозможно переключать с помощью этого плагина.
   
 ### `aset <bots> <appid> <achievements>`
-Включает (открывает) достижения с указанными номерами в заданной игре на заданных ботах. Обратите внимание, что в отличии от команды `alist`, вы можете указать только один appid. Номера достижений соответствуют тем, которые выводит команда `alist`. Вы можете вместо списка с номерами достижений указать `*` чтобы включить все доступные достижения.
-Примеры:
-  `aset bot1 370910 1,2,5`
+Включает (открывает) достижения с указанными номерами в заданной игре на заданных ботах. Обратите внимание, что в отличии от команды `alist`, вы можете указать только один appid. Номера достижений соответствуют тем, которые выводит команда `alist`. Вы можете вместо списка с номерами достижений указать `*` чтобы включить все доступные достижения.<br/>
+Примеры:<br/>
+  `aset bot1 370910 1,2,5`<br/>
   `aset bot1 370910 *`
   
 ### `areset <bots> <appid> <achievements>`
-Выключает (закрывает) достижения с указанными номерами в заданной игре на заданных ботах. Обратите внимание, что в отличии от команды `alist`, вы можете указать только один appid. Номера достижений соответствуют тем, которые выводит команда `alist`. Вы можете вместо списка с номерами достижений указать `*` чтобы выключить все доступные достижения.
-Примеры:
-  `areset bot1 370910 1,2,5`
+Выключает (закрывает) достижения с указанными номерами в заданной игре на заданных ботах. Обратите внимание, что в отличии от команды `alist`, вы можете указать только один appid. Номера достижений соответствуют тем, которые выводит команда `alist`. Вы можете вместо списка с номерами достижений указать `*` чтобы выключить все доступные достижения.<br/>
+Примеры:<br/>
+  `areset bot1 370910 1,2,5`<br/>
   `areset bot1 370910 *`
 
 ![downloads](https://img.shields.io/github/downloads/Ryzhehvost/ASF-Achievement-Manager/total.svg?style=social)
