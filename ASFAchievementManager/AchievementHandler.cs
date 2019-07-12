@@ -86,7 +86,7 @@ namespace ASFAchievementManager {
 								uint dependancyValue = uint.Parse((Achievement.Children.Find(Child => Child.Name == "progress") == null) ? "0" : Achievement.Children.Find(Child => Child.Name == "progress").Children.Find(Child => Child.Name == "max_val").Value);
 								string lang = CultureInfo.CurrentUICulture.EnglishName.ToLower();
 								if (lang.IndexOf('(') > 0) {
-									lang = lang.Substring(0, lang.IndexOf('(')-1);
+									lang = lang.Substring(0, lang.IndexOf('(') - 1);
 								}
 								if (Achievement.Children.Find(Child => Child.Name == "display").Children.Find(Child => Child.Name == "name").Children.Find(Child => Child.Name == lang) == null) {
 									lang = "english";//fallback to english
@@ -150,7 +150,7 @@ namespace ASFAchievementManager {
 
 		//Utilities
 
-		private async void TimeoutRelease (TimeSpan timeout) {
+		private async void TimeoutRelease(TimeSpan timeout) {
 			await Task.Delay(timeout).ConfigureAwait(false);
 			if (AchievementSemaphore.CurrentCount == 0) {
 				Success = false;
@@ -243,7 +243,9 @@ namespace ASFAchievementManager {
 			List<CMsgClientStoreUserStats2.Stats> statsToSet = new List<CMsgClientStoreUserStats2.Stats>();
 			if (achievements.Count == 0) { //if no parameters provided - set/reset all. Don't kill me Archi.
 				for (int counter = 0; counter < Stats.Count; counter++) {
-					SetStat(statsToSet, counter, set);
+					if (!Stats[counter].Restricted) {
+						SetStat(statsToSet, counter, set);
+					}
 				}
 			} else {
 				foreach (var ahcievement in achievements) {
@@ -288,7 +290,7 @@ namespace ASFAchievementManager {
 			//string json = JsonConvert.SerializeObject(request.Body);
 			Success = false;
 			TimeoutRelease(new TimeSpan(0, 0, ASF.GlobalConfig.ConnectionTimeout));
-			Client.Send(request);			
+			Client.Send(request);
 			await AchievementSemaphore.WaitAsync().ConfigureAwait(false);
 			responses.Add(Success ? Strings.Success : Strings.WarningFailed);
 			AchievementSemaphore.Release();
