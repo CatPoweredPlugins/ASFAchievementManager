@@ -8,11 +8,12 @@ using ArchiSteamFarm.Localization;
 using JetBrains.Annotations;
 using SteamKit2;
 using System.Linq;
+using System.Collections.Concurrent;
 
 namespace ASFAchievementManager {
 	[Export(typeof(IPlugin))]
 	public sealed class ASFAchievementManager : IBotSteamClient, IBotMessage, IBotCommand {
-		private static Dictionary<Bot, AchievementHandler> AchievementHandlers = new Dictionary<Bot, AchievementHandler>();
+		private static ConcurrentDictionary<Bot, AchievementHandler> AchievementHandlers = new ConcurrentDictionary<Bot, AchievementHandler>();
 		public string Name => "ASF Achievement Manager";
 		public Version Version => typeof(ASFAchievementManager).Assembly.GetName().Version;
 
@@ -66,7 +67,7 @@ namespace ASFAchievementManager {
 
 		public IReadOnlyCollection<ClientMsgHandler> OnBotSteamHandlersInit([NotNull] Bot bot) {
 			AchievementHandler CurrentBotAchievementHandler = new AchievementHandler();
-			AchievementHandlers.Add(bot, CurrentBotAchievementHandler);
+			AchievementHandlers.TryAdd(bot, CurrentBotAchievementHandler);
 			return new HashSet<ClientMsgHandler> { CurrentBotAchievementHandler };
 		}
 
