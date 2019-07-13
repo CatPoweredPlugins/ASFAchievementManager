@@ -71,6 +71,7 @@ namespace ASFAchievementManager {
 			return new HashSet<ClientMsgHandler> { CurrentBotAchievementHandler };
 		}
 
+		//Responses
 
 		private static async Task<string> ResponseAchievementList(Bot bot, string appids) {
 			string[] gameIDs = appids.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -91,9 +92,10 @@ namespace ASFAchievementManager {
 				}
 
 				//maybe just do it with foreach? It won't be parallel anyway.
-				IList<string> results = await Utilities.InParallel(gamesToGetAchievements.Select(game => AchievementHandler.GetAchievements(bot, game))).ConfigureAwait(false);
-
-				List<string> responses = new List<string>(results.Where(result => !string.IsNullOrEmpty(result)));
+				List<string> responses = new List<string>();
+				foreach (uint appID in gamesToGetAchievements) {
+					responses.Add(await AchievementHandler.GetAchievements(bot, appID).ConfigureAwait(false));
+				}
 
 				return responses.Count > 0 ? bot.Commands.FormatBotResponse(string.Join(Environment.NewLine, responses)) : null;
 
