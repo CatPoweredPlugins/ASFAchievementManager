@@ -17,9 +17,7 @@ namespace ASFAchievementManager {
 		public string Name => "ASF Achievement Manager";
 		public Version Version => typeof(ASFAchievementManager).Assembly.GetName().Version;
 
-		public void OnLoaded() {
-			ASF.ArchiLogger.LogGenericInfo("ASF Achievement Manager Plugin by Ryzhehvost, powered by ginger cats");
-		}
+		public void OnLoaded() => ASF.ArchiLogger.LogGenericInfo("ASF Achievement Manager Plugin by Ryzhehvost, powered by ginger cats");
 
 		public async Task<string> OnBotMessage([NotNull] Bot bot, ulong steamID, [NotNull] string message) {
 			if (!bot.HasPermission(steamID, BotConfig.EPermission.Master)) {
@@ -59,9 +57,7 @@ namespace ASFAchievementManager {
 			}
 		}
 
-		public async Task<string> OnBotCommand([NotNull] Bot bot, ulong steamID, [NotNull] string message, string[] args) {
-			return await OnBotMessage(bot, steamID, string.Join(" ", args)).ConfigureAwait(false);
-		}
+		public async Task<string> OnBotCommand([NotNull] Bot bot, ulong steamID, [NotNull] string message, string[] args) => await OnBotMessage(bot, steamID, string.Join(" ", args)).ConfigureAwait(false);
 
 		public void OnBotSteamCallbacksInit([NotNull] Bot bot, [NotNull] CallbackManager callbackManager) { }
 
@@ -91,11 +87,10 @@ namespace ASFAchievementManager {
 					gamesToGetAchievements.Add(gameID);
 				}
 
-				//maybe just do it with foreach? It won't be parallel anyway.
-				List<string> responses = new List<string>();
-				foreach (uint appID in gamesToGetAchievements) {
-					responses.Add(await AchievementHandler.GetAchievements(bot, appID).ConfigureAwait(false));
-				}
+
+				IList<string> results = await Utilities.InParallel(gamesToGetAchievements.Select(appID => Task.Run<string>(() => AchievementHandler.GetAchievements(bot, appID)))).ConfigureAwait(false);
+
+				List<string> responses = new List<string>(results.Where(result => !string.IsNullOrEmpty(result)));
 
 				return responses.Count > 0 ? bot.Commands.FormatBotResponse(string.Join(Environment.NewLine, responses)) : null;
 
@@ -123,8 +118,7 @@ namespace ASFAchievementManager {
 
 
 		private static async Task<string> ResponseAchievementSet(Bot bot, string appid, string AchievementNumbers, bool set = true) {
-			uint appId;
-			if (!uint.TryParse(appid, out appId)) {
+			if (!uint.TryParse(appid, out uint appId)) {
 				return bot.Commands.FormatBotResponse(string.Format(Strings.ErrorIsInvalid, nameof(appId)));
 			}
 
@@ -148,7 +142,7 @@ namespace ASFAchievementManager {
 					return bot.Commands.FormatBotResponse(string.Format(Strings.ErrorIsEmpty, "Achievements list"));
 				}
 			}
-			return bot.Commands.FormatBotResponse(await AchievementHandler.SetAchievements(bot, appId, achievements,set).ConfigureAwait(false));
+			return bot.Commands.FormatBotResponse(await Task.Run<string>(()=>AchievementHandler.SetAchievements(bot, appId, achievements, set)).ConfigureAwait(false));
 		}
 
 		private static async Task<string> ResponseAchievementSet(string botNames, string appid, string AchievementNumbers, bool set = true) {
@@ -165,48 +159,7 @@ namespace ASFAchievementManager {
 
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
-/*
-		private static async Task<string> ResponseAchievementReset(Bot bot, string appid, string AchievementNumbers) {
-			uint appId;
-			if (!uint.TryParse(appid, out appId)) {
-				return bot.Commands.FormatBotResponse(string.Format(Strings.ErrorIsInvalid, nameof(appId)));
-			}
 
-			if (!AchievementHandlers.TryGetValue(bot, out AchievementHandler AchievementHandler)) {
-				return bot.Commands.FormatBotResponse(string.Format(Strings.ErrorIsEmpty, nameof(AchievementHandlers)));
-			}
-
-			HashSet<uint> achievements = new HashSet<uint>();
-
-			string[] achievementStrings = AchievementNumbers.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-
-			foreach (string achievement in achievementStrings) {
-				if (!uint.TryParse(achievement, out uint achievementNumber) || (achievementNumber == 0)) {
-					return bot.Commands.FormatBotResponse(string.Format(Strings.ErrorParsingObject, nameof(achievement)));
-				}
-
-				achievements.Add(achievementNumber);
-			}
-
-			return bot.Commands.FormatBotResponse(await AchievementHandler.SetAchievements(bot, appId, achievements,false).ConfigureAwait(false));
-
-		}
-
-		private static async Task<string> ResponseAchievementReset(string botNames, string appid, string AchievementNumbers) {
-
-			HashSet<Bot> bots = Bot.GetBots(botNames);
-
-			if ((bots == null) || (bots.Count == 0)) {
-				return Commands.FormatStaticResponse(string.Format(Strings.BotNotFound, botNames));
-			}
-
-			IList<string> results = await Utilities.InParallel(bots.Select(bot => ResponseAchievementReset(bot, appid, AchievementNumbers))).ConfigureAwait(false);
-
-			List<string> responses = new List<string>(results.Where(result => !string.IsNullOrEmpty(result)));
-
-			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
-		}
-*/
 	}
 
 }
