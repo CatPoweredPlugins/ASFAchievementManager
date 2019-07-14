@@ -196,7 +196,7 @@ namespace ASFAchievementManager {
 			Responses.TryRemove(gameID,out StoredResponse Dummy);
 			
 			Client.Send(request);
-			SpinWait.SpinUntil(() => Responses.ContainsKey(gameID));
+			SpinWait.SpinUntil(() => Responses.ContainsKey(gameID), TimeSpan.FromSeconds(ASF.GlobalConfig.ConnectionTimeout));
 			//get stored data
 			if (!Responses.TryGetValue(gameID, out StoredResponse response)) {
 				return "Can't retrieve achievements for " + gameID.ToString();
@@ -282,7 +282,7 @@ namespace ASFAchievementManager {
 			request.Body.stats.AddRange(statsToSet);
 			Responses.TryRemove(appId, out StoredResponse Dummy);
 			Client.Send(request);
-			SpinWait.SpinUntil(() => Responses.ContainsKey(appId));
+			SpinWait.SpinUntil(() => Responses.ContainsKey(appId), TimeSpan.FromSeconds(ASF.GlobalConfig.ConnectionTimeout));
 			if (!Responses.TryGetValue(appId, out StoredResponse storeResponse)) {
 				responses.Add(Strings.WarningFailed);
 			}
