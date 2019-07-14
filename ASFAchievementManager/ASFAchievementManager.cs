@@ -12,19 +12,17 @@ using System.Collections.Concurrent;
 
 namespace ASFAchievementManager {
 	[Export(typeof(IPlugin))]
-	public sealed class ASFAchievementManager : IBotSteamClient, IBotMessage, IBotCommand {
+	public sealed class ASFAchievementManager : IBotSteamClient, IBotCommand {
 		private static ConcurrentDictionary<Bot, AchievementHandler> AchievementHandlers = new ConcurrentDictionary<Bot, AchievementHandler>();
 		public string Name => "ASF Achievement Manager";
 		public Version Version => typeof(ASFAchievementManager).Assembly.GetName().Version;
 
 		public void OnLoaded() => ASF.ArchiLogger.LogGenericInfo("ASF Achievement Manager Plugin by Ryzhehvost, powered by ginger cats");
 
-		public async Task<string> OnBotMessage([NotNull] Bot bot, ulong steamID, [NotNull] string message) {
+		public async Task<string> OnBotCommand([NotNull] Bot bot, ulong steamID, [NotNull] string message, string[] args) {
 			if (!bot.HasPermission(steamID, BotConfig.EPermission.Master)) {
 				return null;
 			}
-
-			string[] args = message.Split((char[]) null, StringSplitOptions.RemoveEmptyEntries);
 
 			switch (args.Length) {
 				case 0:
@@ -56,8 +54,6 @@ namespace ASFAchievementManager {
 					}
 			}
 		}
-
-		public async Task<string> OnBotCommand([NotNull] Bot bot, ulong steamID, [NotNull] string message, string[] args) => await OnBotMessage(bot, steamID, string.Join(" ", args)).ConfigureAwait(false);
 
 		public void OnBotSteamCallbacksInit([NotNull] Bot bot, [NotNull] CallbackManager callbackManager) { }
 
