@@ -7,7 +7,7 @@ This plugin is provided on AS-IS basis, without any guarantee at all. Author is 
 This plugin for [ASF](https://github.com/JustArchiNET/ArchiSteamFarm/) allows you to view, set and reset achievements in steam games, similar to [SAM](https://github.com/gibbed/SteamAchievementManager). Works only with ASF v4.0+ (make sure to check actual required version in release notes). 
 
 ## Installation
-- download .zip file from [latest release](https://github.com/Ryzhehvost/ASF-Achievement-Manager/releases/latest), in most cases you need `ASF-Achievement-Managerm.zip`, but if you use ASF-generic-netf.zip (you really need a strong reason to do that) download `ASF-Achievement-Manager-netf.zip`.
+- download .zip file from [latest release](https://github.com/Ryzhehvost/ASF-Achievement-Manager/releases/latest), in most cases you need `ASF-Achievement-Manager.zip`, but if you use ASF-generic-netf.zip (you really need a strong reason to do that) download `ASF-Achievement-Manager-netf.zip`.
 - unpack downloaded .zip file to `plugins` folder inside your ASF folder.
 - (re)start ASF, you should get a message indicating that plugin loaded successfully. 
 
