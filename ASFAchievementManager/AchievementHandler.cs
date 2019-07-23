@@ -233,6 +233,10 @@ namespace ASFAchievementManager {
 				return GetAchievementsResult;
 			}
 			List<StatData> Stats = ParseResponse(response.Response);
+			if (Stats == null){
+				responses.Add(Strings.WarningFailed);
+				return "\u200B\n" + string.Join(Environment.NewLine, responses);
+			}
 
 			List<CMsgClientStoreUserStats2.Stats> statsToSet = new List<CMsgClientStoreUserStats2.Stats>();
 
@@ -259,10 +263,6 @@ namespace ASFAchievementManager {
 					SetStat(statsToSet, Stats, response, (int) ahcievement - 1, set);
 				}
 			}
-			if (statsToSet == null) {
-				responses.Add(Strings.WarningFailed);
-				return "\u200B\n" + string.Join(Environment.NewLine, responses);
-			};
 			if (statsToSet.Count == 0) {
 				responses.Add(Strings.WarningFailed);
 				return "\u200B\n" + string.Join(Environment.NewLine, responses);
