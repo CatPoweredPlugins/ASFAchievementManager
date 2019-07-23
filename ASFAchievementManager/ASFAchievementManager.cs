@@ -42,13 +42,13 @@ namespace ASFAchievementManager {
 						case "ALIST":
 							return await ResponseAchievementList(bot, args[1]).ConfigureAwait(false);
 						case "ASET" when args.Length > 3:
-							return await ResponseAchievementSet(args[1], args[2], Utilities.GetArgsAsText(args, 3, ","),true).ConfigureAwait(false);
+							return await ResponseAchievementSet(args[1], args[2], Utilities.GetArgsAsText(args, 3, ","), true).ConfigureAwait(false);
 						case "ASET" when args.Length > 2:
-							return await ResponseAchievementSet(bot, args[1], Utilities.GetArgsAsText(args, 2, ","),true).ConfigureAwait(false);
+							return await ResponseAchievementSet(bot, args[1], Utilities.GetArgsAsText(args, 2, ","), true).ConfigureAwait(false);
 						case "ARESET" when args.Length > 3:
-							return await ResponseAchievementSet(args[1], args[2], Utilities.GetArgsAsText(args, 3, ","),false).ConfigureAwait(false);
+							return await ResponseAchievementSet(args[1], args[2], Utilities.GetArgsAsText(args, 3, ","), false).ConfigureAwait(false);
 						case "ARESET" when args.Length > 2:
-							return await ResponseAchievementSet(bot, args[1], Utilities.GetArgsAsText(args, 2, ","),false).ConfigureAwait(false);
+							return await ResponseAchievementSet(bot, args[1], Utilities.GetArgsAsText(args, 2, ","), false).ConfigureAwait(false);
 						default:
 							return null;
 					}
@@ -114,6 +114,9 @@ namespace ASFAchievementManager {
 
 
 		private static async Task<string> ResponseAchievementSet(Bot bot, string appid, string AchievementNumbers, bool set = true) {
+			if (string.IsNullOrEmpty(AchievementNumbers)) {
+				return bot.Commands.FormatBotResponse(string.Format(Strings.ErrorObjectIsNull, nameof(AchievementNumbers)));
+			}
 			if (!uint.TryParse(appid, out uint appId)) {
 				return bot.Commands.FormatBotResponse(string.Format(Strings.ErrorIsInvalid, nameof(appId)));
 			}
@@ -138,7 +141,7 @@ namespace ASFAchievementManager {
 					return bot.Commands.FormatBotResponse(string.Format(Strings.ErrorIsEmpty, "Achievements list"));
 				}
 			}
-			return bot.Commands.FormatBotResponse(await Task.Run<string>(()=>AchievementHandler.SetAchievements(bot, appId, achievements, set)).ConfigureAwait(false));
+			return bot.Commands.FormatBotResponse(await Task.Run<string>(() => AchievementHandler.SetAchievements(bot, appId, achievements, set)).ConfigureAwait(false));
 		}
 
 		private static async Task<string> ResponseAchievementSet(string botNames, string appid, string AchievementNumbers, bool set = true) {
