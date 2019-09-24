@@ -194,7 +194,7 @@ namespace ASFAchievementManager {
 			};
 
 			Responses.TryRemove(gameID,out StoredResponse Dummy);
-			
+
 			Client.Send(request);
 			SpinWait.SpinUntil(() => Responses.ContainsKey(gameID), TimeSpan.FromSeconds(ASF.GlobalConfig.ConnectionTimeout));
 			//get stored data
@@ -217,7 +217,7 @@ namespace ASFAchievementManager {
 				}
 
 			}
-			return responses.Count > 0 ? "\u200B\nAchievemens for " + gameID.ToString() + ":\n" + string.Join(Environment.NewLine, responses) : "Can't retrieve achievements for " + gameID.ToString();
+			return responses.Count > 0 ? "\u200B\nAchievements for " + gameID.ToString() + ":\n" + string.Join(Environment.NewLine, responses) : "Can't retrieve achievements for " + gameID.ToString();
 		}
 
 		internal string SetAchievements(Bot bot, uint appId, HashSet<uint> achievements, bool set = true) {
@@ -247,20 +247,20 @@ namespace ASFAchievementManager {
 					}
 				}
 			} else {
-				foreach (uint ahcievement in achievements) {
-					if (Stats.Count < ahcievement) {
-						responses.Add("Achievement #" + ahcievement.ToString() + " is out of range");
+				foreach (uint achievement in achievements) {
+					if (Stats.Count < achievement) {
+						responses.Add("Achievement #" + achievement.ToString() + " is out of range");
 						continue;
 					}
-					if (Stats[(int) ahcievement - 1].IsSet == set) {
-						responses.Add("Achievement #" + ahcievement.ToString() + " is already " + (set ? "unlocked" : "locked"));
+					if (Stats[(int) achievement - 1].IsSet == set) {
+						responses.Add("Achievement #" + achievement.ToString() + " is already " + (set ? "unlocked" : "locked"));
 						continue;
 					}
-					if (Stats[(int) ahcievement - 1].Restricted) {
-						responses.Add("Achievement #" + ahcievement.ToString() + " is protected and can't be switched");
+					if (Stats[(int) achievement - 1].Restricted) {
+						responses.Add("Achievement #" + achievement.ToString() + " is protected and can't be switched");
 						continue;
 					}
-					SetStat(statsToSet, Stats, response, (int) ahcievement - 1, set);
+					SetStat(statsToSet, Stats, response, (int) achievement - 1, set);
 				}
 			}
 			if (statsToSet.Count == 0) {
@@ -291,6 +291,5 @@ namespace ASFAchievementManager {
 		}
 
 	}
-
 
 }
