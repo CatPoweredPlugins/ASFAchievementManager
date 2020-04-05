@@ -38,10 +38,6 @@ namespace ASFAchievementManager {
 				return;
 			}
 				ClientMsgProtobuf<CMsgClientGetUserStatsResponse> response = new ClientMsgProtobuf<CMsgClientGetUserStatsResponse>(packetMsg);
-				//store data
-				if (!response.Body.game_idSpecified) {
-					ASF.ArchiLogger.LogNullError("response.Body.game_id");
-				}
 				if (!Responses.TryAdd(response.Body.game_id,new StoredResponse{
 					Success = response.Body.eresult == 1,
 					Response = response.Body
@@ -61,9 +57,6 @@ namespace ASFAchievementManager {
 				return;
 			}
 				ClientMsgProtobuf<CMsgClientStoreUserStatsResponse> response = new ClientMsgProtobuf<CMsgClientStoreUserStatsResponse>(packetMsg);
-				if (!response.Body.game_idSpecified) {
-					ASF.ArchiLogger.LogNullError("response.Body.game_id");
-				}
 				if (!Responses.TryAdd(response.Body.game_id, new StoredResponse {
 					Success = response.Body.eresult == 1,
 					Response = null //we don't care about this, just need to know that request was successful
@@ -82,7 +75,7 @@ namespace ASFAchievementManager {
 		private List<StatData> ParseResponse(CMsgClientGetUserStatsResponse Response) {
 			List<StatData> result = new List<StatData>();
 			KeyValue KeyValues = new KeyValue();
-			if (Response.schemaSpecified && Response.schema != null) {
+			if (Response.schema != null) {
 				using (MemoryStream ms = new MemoryStream(Response.schema)) {
 					if (!KeyValues.TryReadAsBinary(ms)) {
 						ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorIsInvalid, nameof(Response.schema)));
