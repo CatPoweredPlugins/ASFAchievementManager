@@ -37,17 +37,17 @@ namespace ASFAchievementManager {
 				ASF.ArchiLogger.LogNullError(nameof(packetMsg));
 				return;
 			}
-				ClientMsgProtobuf<CMsgClientGetUserStatsResponse> response = new ClientMsgProtobuf<CMsgClientGetUserStatsResponse>(packetMsg);
-				if (!Responses.TryAdd(response.Body.game_id,new StoredResponse{
-					Success = response.Body.eresult == 1,
-					Response = response.Body
-				})){
-					ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, "GetAchievements"));
-				}
+			ClientMsgProtobuf<CMsgClientGetUserStatsResponse> response = new ClientMsgProtobuf<CMsgClientGetUserStatsResponse>(packetMsg);
+			if (!Responses.TryAdd(response.Body.game_id, new StoredResponse {
+				Success = response.Body.eresult == 1,
+				Response = response.Body
+			})) {
+				ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, "GetAchievements"));
+			}
 
-				if (response.Body.eresult != 1) {
-					ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, "GetAchievements"));
-				}
+			if (response.Body.eresult != 1) {
+				ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, "GetAchievements"));
+			}
 
 		}
 
@@ -56,23 +56,23 @@ namespace ASFAchievementManager {
 				ASF.ArchiLogger.LogNullError(nameof(packetMsg));
 				return;
 			}
-				ClientMsgProtobuf<CMsgClientStoreUserStatsResponse> response = new ClientMsgProtobuf<CMsgClientStoreUserStatsResponse>(packetMsg);
-				if (!Responses.TryAdd(response.Body.game_id, new StoredResponse {
-					Success = response.Body.eresult == 1,
-					Response = null //we don't care about this, just need to know that request was successful
-				})) {
-					ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, "SetAchievements"));
-				}
+			ClientMsgProtobuf<CMsgClientStoreUserStatsResponse> response = new ClientMsgProtobuf<CMsgClientStoreUserStatsResponse>(packetMsg);
+			if (!Responses.TryAdd(response.Body.game_id, new StoredResponse {
+				Success = response.Body.eresult == 1,
+				Response = null //we don't care about this, just need to know that request was successful
+			})) {
+				ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, "SetAchievements"));
+			}
 
-				if (response.Body.eresult != 1) {
-					ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, "SetAchievements"));
-				}
+			if (response.Body.eresult != 1) {
+				ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, "SetAchievements"));
+			}
 
 		}
 
 		//Utilities
 
-		private List<StatData> ParseResponse(CMsgClientGetUserStatsResponse Response) {
+		private List<StatData>? ParseResponse(CMsgClientGetUserStatsResponse Response) {
 			List<StatData> result = new List<StatData>();
 			KeyValue KeyValues = new KeyValue();
 			if (Response.schema != null) {
@@ -84,55 +84,60 @@ namespace ASFAchievementManager {
 				}
 
 				//first we enumerate all real achievements
-				foreach (KeyValue stat in KeyValues.Children.Find(Child => Child.Name == "stats").Children) {
-					if (stat.Children.Find(Child => Child.Name == "type").Value == "4") {
-						foreach (KeyValue Achievement in stat.Children.Find(Child => Child.Name == "bits").Children) {
-							int bitNum = int.Parse(Achievement.Name);
-							uint statNum = uint.Parse(stat.Name);
-							bool isSet = false;
-							if ((Response.stats != null) && (Response.stats.Find(statElement => statElement.stat_id == int.Parse(stat.Name)) != null)) {
-								isSet = (Response.stats.Find(statElement => statElement.stat_id == int.Parse(stat.Name)).stat_value & ((uint) 1 << int.Parse(Achievement.Name))) != 0;
-							};
+				foreach (KeyValue stat in KeyValues.Children.Find(Child => Child.Name == "stats")?.Children ?? new List<KeyValue>()) {
+					if (stat.Children.Find(Child => Child.Name == "type")?.Value == "4") {
+						foreach (KeyValue Achievement in stat.Children.Find(Child => Child.Name == "bits")?.Children ?? new List<KeyValue>()) {
+							if (int.TryParse(Achievement.Name, out int bitNum)) {
+								if (uint.TryParse(stat.Name, out uint statNum)) {
+									bool isSet = false;
+									if ((Response.stats != null) && (Response.stats.Find(statElement => statElement.stat_id == statNum) != null)) {
+										isSet = (Response.stats.Find(statElement => statElement.stat_id == statNum)!.stat_value & ((uint) 1 << bitNum)) != 0;
+									};
 
-							bool restricted = Achievement.Children.Find(Child => Child.Name == "permission") != null;
+									bool restricted = Achievement.Children.Find(Child => Child.Name == "permission") != null;
 
-							string dependancyName = (Achievement.Children.Find(Child => Child.Name == "progress") == null) ? "" : Achievement.Children.Find(Child => Child.Name == "progress").Children.Find(Child => Child.Name == "value").Children.Find(Child => Child.Name == "operand1").Value;
+									string? dependancyName = (Achievement.Children.Find(Child => Child.Name == "progress") == null) ? "" : Achievement.Children.Find(Child => Child.Name == "progress")?.Children?.Find(Child => Child.Name == "value")?.Children?.Find(Child => Child.Name == "operand1")?.Value;
 
-							uint dependancyValue = uint.Parse((Achievement.Children.Find(Child => Child.Name == "progress") == null) ? "0" : Achievement.Children.Find(Child => Child.Name == "progress").Children.Find(Child => Child.Name == "max_val").Value);
-							string lang = CultureInfo.CurrentUICulture.EnglishName.ToLower();
-							if (lang.IndexOf('(') > 0) {
-								lang = lang.Substring(0, lang.IndexOf('(') - 1);
+									uint.TryParse((Achievement.Children.Find(Child => Child.Name == "progress") == null) ? "0" : Achievement.Children.Find(Child => Child.Name == "progress")!.Children.Find(Child => Child.Name == "max_val")?.Value, out uint dependancyValue);
+									string lang = CultureInfo.CurrentUICulture.EnglishName.ToLower();
+									if (lang.IndexOf('(') > 0) {
+										lang = lang.Substring(0, lang.IndexOf('(') - 1);
+									}
+									if (Achievement.Children.Find(Child => Child.Name == "display")?.Children?.Find(Child => Child.Name == "name")?.Children?.Find(Child => Child.Name == lang) == null) {
+										lang = "english";//fallback to english
+									}
+
+									string? name = Achievement.Children.Find(Child => Child.Name == "display")?.Children?.Find(Child => Child.Name == "name")?.Children?.Find(Child => Child.Name == lang)?.Value;
+									result.Add(new StatData() {
+										StatNum = statNum,
+										BitNum = bitNum,
+										IsSet = isSet,
+										Restricted = restricted,
+										DependancyValue = dependancyValue,
+										DependancyName = dependancyName,
+										Dependancy = 0,
+										Name = name
+									});
+
+								}
 							}
-							if (Achievement.Children.Find(Child => Child.Name == "display").Children.Find(Child => Child.Name == "name").Children.Find(Child => Child.Name == lang) == null) {
-								lang = "english";//fallback to english
-							}
-
-							string name = Achievement.Children.Find(Child => Child.Name == "display").Children.Find(Child => Child.Name == "name").Children.Find(Child => Child.Name == lang).Value;
-
-							result.Add(new StatData() {
-								StatNum = statNum,
-								BitNum = bitNum,
-								IsSet = isSet,
-								Restricted = restricted,
-								DependancyValue = dependancyValue,
-								DependancyName = dependancyName,
-								Dependancy = 0,
-								Name = name
-							});
 						}
 					}
 				}
 				//Now we update all dependancies
-				foreach (KeyValue stat in KeyValues.Children.Find(Child => Child.Name == "stats").Children) {
-					if (stat.Children.Find(Child => Child.Name == "type").Value == "1") {
-						uint statNum = uint.Parse(stat.Name);
-						bool restricted = stat.Children.Find(Child => Child.Name == "permission") != null;
-						string name = stat.Children.Find(Child => Child.Name == "name").Value;
-						StatData ParentStat = result.Find(item => item.DependancyName == name);
-						if (ParentStat != null) {
-							ParentStat.Dependancy = statNum;
-							if (restricted && !ParentStat.Restricted) {
-								ParentStat.Restricted = true;
+				foreach (KeyValue stat in KeyValues.Children.Find(Child => Child.Name == "stats")?.Children ?? new List<KeyValue>()) {
+					if (stat.Children.Find(Child => Child.Name == "type")?.Value == "1") {
+						if (uint.TryParse(stat.Name, out uint statNum)) {
+							bool restricted = stat.Children.Find(Child => Child.Name == "permission") != null;
+							string? name = stat.Children.Find(Child => Child.Name == "name")?.Value;
+							if (name != null) {
+								StatData? ParentStat = result.Find(item => item.DependancyName == name);
+								if (ParentStat != null) {
+									ParentStat.Dependancy = statNum;
+									if (restricted && !ParentStat.Restricted) {
+										ParentStat.Restricted = true;
+									}
+								}
 							}
 						}
 					}
@@ -145,11 +150,12 @@ namespace ASFAchievementManager {
 			if (achievementnum < 0 || achievementnum > Stats.Count) {
 				return; //it should never happen
 			}
-			CMsgClientStoreUserStats2.Stats currentstat = statsToSet.Find(stat => stat.stat_id == Stats[achievementnum].StatNum);
+			CMsgClientStoreUserStats2.Stats? currentstat = statsToSet.Find(stat => stat.stat_id == Stats[achievementnum].StatNum);
 			if (currentstat == null) {
 				currentstat = new CMsgClientStoreUserStats2.Stats() {
 					stat_id = Stats[achievementnum].StatNum,
-					stat_value = storedResponse.Response.stats.Find(stat => stat.stat_id == Stats[achievementnum].StatNum) != null ? storedResponse.Response.stats.Find(stat => stat.stat_id == Stats[achievementnum].StatNum).stat_value : 0
+					//stat_value = storedResponse.Response.stats.Find(stat => stat.stat_id == Stats[achievementnum].StatNum) != null ? storedResponse.Response.stats.Find(stat => stat.stat_id == Stats[achievementnum].StatNum).stat_value : 0
+					stat_value = storedResponse?.Response?.stats?.Find(stat => stat.stat_id == Stats[achievementnum].StatNum)?.stat_value ?? 0
 				};
 				statsToSet.Add(currentstat);
 			}
@@ -159,7 +165,7 @@ namespace ASFAchievementManager {
 				currentstat.stat_value = currentstat.stat_value & ~((uint) 1 << Stats[achievementnum].BitNum);
 			}
 			if (Stats[achievementnum].DependancyName != "") {
-				CMsgClientStoreUserStats2.Stats dependancystat = statsToSet.Find(stat => stat.stat_id == Stats[achievementnum].Dependancy);
+				CMsgClientStoreUserStats2.Stats? dependancystat = statsToSet.Find(stat => stat.stat_id == Stats[achievementnum].Dependancy);
 				if (dependancystat == null) {
 					dependancystat = new CMsgClientStoreUserStats2.Stats() {
 						stat_id = Stats[achievementnum].Dependancy,
@@ -186,19 +192,21 @@ namespace ASFAchievementManager {
 				}
 			};
 
-			Responses.TryRemove(gameID,out StoredResponse Dummy);
+			Responses.TryRemove(gameID, out StoredResponse? Dummy);
 
 			Client.Send(request);
-			SpinWait.SpinUntil(() => Responses.ContainsKey(gameID), TimeSpan.FromSeconds(ASF.GlobalConfig.ConnectionTimeout));
+			SpinWait.SpinUntil(() => Responses.ContainsKey(gameID), TimeSpan.FromSeconds(ASF.GlobalConfig?.ConnectionTimeout ?? GlobalConfig.DefaultConnectionTimeout));
 			//get stored data
-			if (!Responses.TryGetValue(gameID, out StoredResponse response)) {
+			if (!Responses.TryGetValue(gameID, out StoredResponse? response)) {
 				return "Can't retrieve achievements for " + gameID.ToString();
 			}
-			if (!response.Success) {
+
+			if (response == null || response.Response == null || !response.Success) {
 				return "Can't retrieve achievements for " + gameID.ToString();
 			}
+
 			List<string> responses = new List<string>();
-			List<StatData> Stats = ParseResponse(response.Response);
+			List<StatData>? Stats = ParseResponse(response.Response);
 			if (Stats == null) {
 				bot.ArchiLogger.LogNullError(nameof(Stats));
 			} else if (Stats.Count == 0) {
@@ -219,14 +227,26 @@ namespace ASFAchievementManager {
 			}
 			List<string> responses = new List<string>();
 			string GetAchievementsResult = GetAchievements(bot, appId);
-			if (!Responses.TryGetValue(appId, out StoredResponse response)) {
+			if (!Responses.TryGetValue(appId, out StoredResponse? response)) {
 				return GetAchievementsResult;
 			}
+			if (response == null) {
+				bot.ArchiLogger.LogNullError(nameof(response));
+				return GetAchievementsResult;
+			}
+
 			if (!response.Success) {
 				return GetAchievementsResult;
 			}
-			List<StatData> Stats = ParseResponse(response.Response);
-			if (Stats == null){
+
+			if (response.Response == null) {
+				bot.ArchiLogger.LogNullError(nameof(response.Response));
+				responses.Add(Strings.WarningFailed);
+				return "\u200B\n" + string.Join(Environment.NewLine, responses);
+			}
+
+			List<StatData>? Stats = ParseResponse(response.Response);
+			if (Stats == null) {
 				responses.Add(Strings.WarningFailed);
 				return "\u200B\n" + string.Join(Environment.NewLine, responses);
 			}
@@ -273,13 +293,13 @@ namespace ASFAchievementManager {
 				}
 			};
 			request.Body.stats.AddRange(statsToSet);
-			Responses.TryRemove(appId, out StoredResponse Dummy);
+			Responses.TryRemove(appId, out StoredResponse? Dummy);
 			Client.Send(request);
-			SpinWait.SpinUntil(() => Responses.ContainsKey(appId), TimeSpan.FromSeconds(ASF.GlobalConfig.ConnectionTimeout));
-			if (!Responses.TryGetValue(appId, out StoredResponse storeResponse)) {
+			SpinWait.SpinUntil(() => Responses.ContainsKey(appId), TimeSpan.FromSeconds(ASF.GlobalConfig?.ConnectionTimeout ?? GlobalConfig.DefaultConnectionTimeout));
+			if (!Responses.TryGetValue(appId, out StoredResponse? storeResponse)) {
 				responses.Add(Strings.WarningFailed);
 			}
-			responses.Add(storeResponse.Success ? Strings.Success : Strings.WarningFailed);
+			responses.Add((storeResponse?.Success ?? false) ? Strings.Success : Strings.WarningFailed);
 			return "\u200B\n" + string.Join(Environment.NewLine, responses);
 		}
 

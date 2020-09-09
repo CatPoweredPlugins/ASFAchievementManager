@@ -10,7 +10,7 @@ namespace ASFAchievementManager {
 		public bool Restricted { get; set; }
 		public uint Dependancy { get; set; }
 		public uint DependancyValue { get; set; }
-		public string DependancyName { get; set; }
-		public string Name { get; set; }
+		public string? DependancyName { get; set; }
+		public string? Name { get; set; }
 	}
 }

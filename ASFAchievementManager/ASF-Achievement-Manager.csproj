@@ -4,6 +4,8 @@
     <Authors>Ryzhehvost</Authors>
     <AssemblyVersion>0.1.2.0</AssemblyVersion>
     <TargetFrameworks>netcoreapp3.1;net48</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,9 +21,5 @@
   <ItemGroup>
     <ProjectReference Include="..\ArchiSteamFarm\ArchiSteamFarm\ArchiSteamFarm.csproj" />
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="mkdir $(TargetDir)ASFAchievementManager&#xD;&#xA;copy $(TargetPath) $(TargetDir)ASFAchievementManager\&#xD;&#xA;7z a -tzip -mx7  ASF-Achievement-Manager.zip $(TargetDir)ASFAchievementManager" />
-  </Target>
 
 </Project>

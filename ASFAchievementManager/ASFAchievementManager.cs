@@ -15,11 +15,11 @@ namespace ASFAchievementManager {
 	public sealed class ASFAchievementManager : IBotSteamClient, IBotCommand {
 		private static ConcurrentDictionary<Bot, AchievementHandler> AchievementHandlers = new ConcurrentDictionary<Bot, AchievementHandler>();
 		public string Name => "ASF Achievement Manager";
-		public Version Version => typeof(ASFAchievementManager).Assembly.GetName().Version;
+		public Version Version => typeof(ASFAchievementManager).Assembly.GetName().Version ?? new Version("0");
 
 		public void OnLoaded() => ASF.ArchiLogger.LogGenericInfo("ASF Achievement Manager Plugin by Ryzhehvost, powered by ginger cats");
 
-		public async Task<string> OnBotCommand([NotNull] Bot bot, ulong steamID, [NotNull] string message, string[] args) {
+		public async Task<string?> OnBotCommand([NotNull] Bot bot, ulong steamID, [NotNull] string message, string[] args) {
 
 			switch (args.Length) {
 				case 0:
@@ -37,7 +37,7 @@ namespace ASFAchievementManager {
 						case "ALIST" when args.Length > 2:
 							return await ResponseAchievementList(steamID, args[1], Utilities.GetArgsAsText(args, 2, ",")).ConfigureAwait(false);
 						case "ALIST":
-							return await ResponseAchievementList(steamID ,bot, args[1]).ConfigureAwait(false);
+							return await ResponseAchievementList(steamID, bot, args[1]).ConfigureAwait(false);
 						case "ASET" when args.Length > 3:
 							return await ResponseAchievementSet(steamID, args[1], args[2], Utilities.GetArgsAsText(args, 3, ","), true).ConfigureAwait(false);
 						case "ASET" when args.Length > 2:
@@ -62,7 +62,7 @@ namespace ASFAchievementManager {
 
 		//Responses
 
-		private static async Task<string> ResponseAchievementList(ulong steamID, Bot bot, string appids) {
+		private static async Task<string?> ResponseAchievementList(ulong steamID, Bot bot, string appids) {
 
 			if (!bot.HasPermission(steamID, BotConfig.EPermission.Master)) {
 				return null;
@@ -73,7 +73,11 @@ namespace ASFAchievementManager {
 			if (gameIDs.Length == 0) {
 				return bot.Commands.FormatBotResponse(string.Format(Strings.ErrorIsEmpty, nameof(gameIDs)));
 			}
-			if (AchievementHandlers.TryGetValue(bot, out AchievementHandler AchievementHandler)) {
+			if (AchievementHandlers.TryGetValue(bot, out AchievementHandler? AchievementHandler)) {
+				if (AchievementHandler == null) {
+					bot.ArchiLogger.LogNullError(nameof(AchievementHandler));
+					return null;
+				}
 
 				HashSet<uint> gamesToGetAchievements = new HashSet<uint>();
 
@@ -99,23 +103,23 @@ namespace ASFAchievementManager {
 
 		}
 
-		private static async Task<string> ResponseAchievementList(ulong steamID, string botNames, string appids) {
+		private static async Task<string?> ResponseAchievementList(ulong steamID, string botNames, string appids) {
 
-			HashSet<Bot> bots = Bot.GetBots(botNames);
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
 				return Commands.FormatStaticResponse(string.Format(Strings.BotNotFound, botNames));
 			}
 
-			IList<string> results = await Utilities.InParallel(bots.Select(bot => ResponseAchievementList(steamID, bot, appids))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseAchievementList(steamID, bot, appids))).ConfigureAwait(false);
 
-			List<string> responses = new List<string>(results.Where(result => !string.IsNullOrEmpty(result)));
+			List<string?> responses = new List<string?>(results.Where(result => !string.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 
 
-		private static async Task<string> ResponseAchievementSet(ulong steamID, Bot bot, string appid, string AchievementNumbers, bool set = true) {
+		private static async Task<string?> ResponseAchievementSet(ulong steamID, Bot bot, string appid, string AchievementNumbers, bool set = true) {
 			if (!bot.HasPermission(steamID, BotConfig.EPermission.Master)) {
 				return null;
 			}
@@ -127,8 +131,13 @@ namespace ASFAchievementManager {
 				return bot.Commands.FormatBotResponse(string.Format(Strings.ErrorIsInvalid, nameof(appId)));
 			}
 
-			if (!AchievementHandlers.TryGetValue(bot, out AchievementHandler AchievementHandler)) {
+			if (!AchievementHandlers.TryGetValue(bot, out AchievementHandler? AchievementHandler)) {
 				return bot.Commands.FormatBotResponse(string.Format(Strings.ErrorIsEmpty, nameof(AchievementHandlers)));
+			}
+
+			if (AchievementHandler == null) {
+				bot.ArchiLogger.LogNullError(nameof(AchievementHandler));
+				return null;
 			}
 
 			HashSet<uint> achievements = new HashSet<uint>();
@@ -150,17 +159,17 @@ namespace ASFAchievementManager {
 			return bot.Commands.FormatBotResponse(await Task.Run<string>(() => AchievementHandler.SetAchievements(bot, appId, achievements, set)).ConfigureAwait(false));
 		}
 
-		private static async Task<string> ResponseAchievementSet(ulong steamID, string botNames, string appid, string AchievementNumbers, bool set = true) {
+		private static async Task<string?> ResponseAchievementSet(ulong steamID, string botNames, string appid, string AchievementNumbers, bool set = true) {
 
-			HashSet<Bot> bots = Bot.GetBots(botNames);
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
 				return Commands.FormatStaticResponse(string.Format(Strings.BotNotFound, botNames));
 			}
 
-			IList<string> results = await Utilities.InParallel(bots.Select(bot => ResponseAchievementSet(steamID, bot, appid, AchievementNumbers, set))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseAchievementSet(steamID, bot, appid, AchievementNumbers, set))).ConfigureAwait(false);
 
-			List<string> responses = new List<string>(results.Where(result => !string.IsNullOrEmpty(result)));
+			List<string?> responses = new List<string?>(results.Where(result => !string.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
