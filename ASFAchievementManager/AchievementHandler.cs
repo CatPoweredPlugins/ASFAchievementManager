@@ -107,7 +107,7 @@ namespace ASFAchievementManager {
 									string? dependancyName = (Achievement.Children.Find(Child => Child.Name == "progress") == null) ? "" : Achievement.Children.Find(Child => Child.Name == "progress")?.Children?.Find(Child => Child.Name == "value")?.Children?.Find(Child => Child.Name == "operand1")?.Value;
 
 									uint.TryParse((Achievement.Children.Find(Child => Child.Name == "progress") == null) ? "0" : Achievement.Children.Find(Child => Child.Name == "progress")!.Children.Find(Child => Child.Name == "max_val")?.Value, out uint dependancyValue);
-									string lang = CultureInfo.CurrentUICulture.EnglishName.ToLower();
+									string lang = CultureInfo.CurrentUICulture.Name.ToLower();
 									if (lang.IndexOf('(') > 0) {
 										lang = lang.Substring(0, lang.IndexOf('(') - 1);
 									}
