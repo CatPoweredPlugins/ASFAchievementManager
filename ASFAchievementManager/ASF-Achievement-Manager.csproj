@@ -1,25 +1,21 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Authors>Ryzhehvost</Authors>
-    <AssemblyVersion>0.1.2.0</AssemblyVersion>
-    <TargetFrameworks>netcoreapp3.1;net48</TargetFrameworks>
+    <AssemblyVersion>0.1.3.0</AssemblyVersion>
+    <TargetFrameworks>net5.0;net48</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="*" IncludeAssets="compile" />
+    <PackageReference Include="SteamKit2" Version="*" IncludeAssets="compile" />
     <PackageReference Include="System.Composition.AttributedModel" Version="*" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="SteamKit2">
-      <HintPath>..\ArchiSteamFarm\ArchiSteamFarm\lib\SteamKit2.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\ArchiSteamFarm\ArchiSteamFarm\ArchiSteamFarm.csproj" />
+    <ProjectReference Include="..\ArchiSteamFarm\ArchiSteamFarm\ArchiSteamFarm.csproj" ExcludeAssets="all" Private="false" />
   </ItemGroup>
 
 </Project>
