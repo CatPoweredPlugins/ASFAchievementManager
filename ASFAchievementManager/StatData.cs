@@ -12,5 +12,6 @@ namespace ASFAchievementManager {
 		public uint DependancyValue { get; set; }
 		public string? DependancyName { get; set; }
 		public string? Name { get; set; }
+		public uint StatValue { get; set; }
 	}
 }
