@@ -37,6 +37,8 @@ Examples:<br/>
   `areset bot1..bot3 370910 2`<br/>
   `areset bot1 370910 *`
 
+You can get support for this plugin in https://steamcommunity.com/groups/Ryzheplugins (or just use github issues).
+
 ---
 
 # Менеджер достижений для ASF
@@ -77,5 +79,7 @@ Examples:<br/>
   `areset bot1 370910 1,2,5`<br/>
   `areset bot1..bot3 370910 2`<br/>
   `areset bot1 370910 *`
+  
+ Помощь по этому плагину вы можете получить в https://steamcommunity.com/groups/Ryzheplugins (или просто используйте раздел issues)
 
 ![downloads](https://img.shields.io/github/downloads/Ryzhehvost/ASF-Achievement-Manager/total.svg?style=social)
