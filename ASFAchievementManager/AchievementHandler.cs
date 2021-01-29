@@ -20,23 +20,21 @@ namespace ASFAchievementManager {
 			switch (packetMsg.MsgType) {
 				case EMsg.ClientGetUserStatsResponse:
 					ClientMsgProtobuf<CMsgClientGetUserStatsResponse> getAchievementsResponse = new(packetMsg);
-					Client.PostCallback(new GetAchievementsCallback(packetMsg.TargetJobID, getAchievementsResponse.Body));
-
+					Client.PostCallback(new GetAchievementsCallback(packetMsg.TargetJobID, getAchievementsResponse.Body, (msg) => msg.eresult));
 					break;
 				case EMsg.ClientStoreUserStatsResponse:
 					ClientMsgProtobuf<CMsgClientStoreUserStatsResponse> setAchievementsResponse = new(packetMsg);
-					Client.PostCallback(new SetAchievementsCallback(packetMsg.TargetJobID, setAchievementsResponse.Body));
-
+					Client.PostCallback(new SetAchievementsCallback(packetMsg.TargetJobID, setAchievementsResponse.Body, (msg) => msg.eresult));
 					break;
 			}
 
 		}
 
-		internal sealed class GetAchievementsCallback : CallbackMsg {
-			internal readonly CMsgClientGetUserStatsResponse Response;
+		internal abstract class AchievementsCallBack<T> : CallbackMsg {
+			internal readonly T Response;
 			internal readonly bool Success;
 
-			internal GetAchievementsCallback(JobID jobID, CMsgClientGetUserStatsResponse msg) {
+			internal AchievementsCallBack(JobID jobID, T msg, Func<T, int> eresult, string error) {
 				if (jobID == null) {
 					throw new ArgumentNullException(nameof(jobID));
 				}
@@ -46,34 +44,27 @@ namespace ASFAchievementManager {
 				}
 
 				JobID = jobID;
-				Success = (EResult) msg.eresult == EResult.OK;
+				Success = (EResult) eresult(msg) == EResult.OK;
 				Response = msg;
 
 				if (!Success) {
-					ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, "GetAchievements"));
+					LogFailure(error);
 				}
+			}
+
+			protected void LogFailure(string error) {
+				ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, error));
 			}
 		}
 
-		internal sealed class SetAchievementsCallback : CallbackMsg {
-			internal readonly bool Success;
+		internal sealed class GetAchievementsCallback : AchievementsCallBack<CMsgClientGetUserStatsResponse> {
+			internal GetAchievementsCallback(JobID jobID, CMsgClientGetUserStatsResponse msg, Func<CMsgClientGetUserStatsResponse, int> eresult)
+				: base(jobID, msg, eresult, "GetAchievements") { }
+		}
 
-			internal SetAchievementsCallback(JobID jobID, CMsgClientStoreUserStatsResponse msg) {
-				if (jobID == null) {
-					throw new ArgumentNullException(nameof(jobID));
-				}
-
-				if (msg == null) {
-					throw new ArgumentNullException(nameof(msg));
-				}
-
-				JobID = jobID;
-				Success = (EResult) msg.eresult == EResult.OK;
-
-				if (!Success) {
-					ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, "SetAchievements"));
-				}
-			}
+		internal sealed class SetAchievementsCallback : AchievementsCallBack<CMsgClientStoreUserStatsResponse> {
+			internal SetAchievementsCallback(JobID jobID, CMsgClientStoreUserStatsResponse msg, Func<CMsgClientStoreUserStatsResponse, int> eresult)
+				: base(jobID, msg, eresult, "SetAchievements") { }
 		}
 
 		//Utilities
@@ -95,19 +86,15 @@ namespace ASFAchievementManager {
 						foreach (KeyValue Achievement in stat.Children.Find(Child => Child.Name == "bits")?.Children ?? new List<KeyValue>()) {
 							if (int.TryParse(Achievement.Name, out int bitNum)) {
 								if (uint.TryParse(stat.Name, out uint statNum)) {
-									bool isSet = false;
-									uint stat_value = 0;
-									if (Response?.stats?.Find(statElement => statElement.stat_id == statNum) != null) {
-										stat_value = Response.stats.Find(statElement => statElement.stat_id == statNum)!.stat_value;
-										isSet = (stat_value & ((uint) 1 << bitNum)) != 0;
-									};
+									uint? stat_value = Response?.stats?.Find(statElement => statElement.stat_id == statNum)?.stat_value;
+									bool isSet = stat_value != null && (stat_value & ((uint) 1 << bitNum)) != 0;
 
 									bool restricted = Achievement.Children.Find(Child => Child.Name == "permission") != null;
 
 									string? dependancyName = (Achievement.Children.Find(Child => Child.Name == "progress") == null) ? "" : Achievement.Children.Find(Child => Child.Name == "progress")?.Children?.Find(Child => Child.Name == "value")?.Children?.Find(Child => Child.Name == "operand1")?.Value;
 
 									uint.TryParse((Achievement.Children.Find(Child => Child.Name == "progress") == null) ? "0" : Achievement.Children.Find(Child => Child.Name == "progress")!.Children.Find(Child => Child.Name == "max_val")?.Value, out uint dependancyValue);
-									string lang = CultureInfo.CurrentUICulture.Name.ToLower();
+									string lang = CultureInfo.CurrentUICulture.EnglishName.ToLower();
 									if (lang.IndexOf('(') > 0) {
 										lang = lang.Substring(0, lang.IndexOf('(') - 1);
 									}
@@ -125,7 +112,7 @@ namespace ASFAchievementManager {
 										DependancyName = dependancyName,
 										Dependancy = 0,
 										Name = name,
-										StatValue = stat_value
+										StatValue = stat_value ?? 0
 									});
 
 								}
@@ -247,7 +234,7 @@ namespace ASFAchievementManager {
 			List<CMsgClientStoreUserStats2.Stats> statsToSet = new List<CMsgClientStoreUserStats2.Stats>();
 
 			if (achievements.Count == 0) { //if no parameters provided - set/reset all. Don't kill me Archi.
-				foreach (var stat in Stats) {
+				foreach (StatData stat in Stats) {
 					if (!stat.Restricted) {
 						statsToSet.AddRange(GetStatsToSet(statsToSet, stat, set));
 					}
@@ -291,7 +278,7 @@ namespace ASFAchievementManager {
 			request.Body.stats.AddRange(statsToSet);
 			Client.Send(request);
 
-			var setResponse = await new AsyncJob<SetAchievementsCallback>(Client, request.SourceJobID).ToLongRunningTask().ConfigureAwait(false);
+			SetAchievementsCallback setResponse = await new AsyncJob<SetAchievementsCallback>(Client, request.SourceJobID).ToLongRunningTask().ConfigureAwait(false);
 
 			responses.Add((setResponse?.Success ?? false) ? Strings.Success : Strings.WarningFailed);
 			return "\u200B\n" + string.Join(Environment.NewLine, responses);

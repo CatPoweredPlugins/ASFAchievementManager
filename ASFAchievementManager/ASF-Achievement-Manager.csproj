@@ -9,13 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="*" IncludeAssets="compile" />
-    <PackageReference Include="SteamKit2" Version="*" IncludeAssets="compile" />
-    <PackageReference Include="System.Composition.AttributedModel" Version="*" />
+    <Reference Include="SteamKit2">
+      <HintPath>..\ArchiSteamFarm\ArchiSteamFarm\lib\SteamKit2.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ArchiSteamFarm\ArchiSteamFarm\ArchiSteamFarm.csproj" ExcludeAssets="all" Private="false" />
+    <ProjectReference Include="..\ArchiSteamFarm\ArchiSteamFarm\ArchiSteamFarm.csproj" />
   </ItemGroup>
 
 </Project>
