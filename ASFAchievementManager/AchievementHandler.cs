@@ -20,11 +20,11 @@ namespace ASFAchievementManager {
 			switch (packetMsg.MsgType) {
 				case EMsg.ClientGetUserStatsResponse:
 					ClientMsgProtobuf<CMsgClientGetUserStatsResponse> getAchievementsResponse = new(packetMsg);
-					Client.PostCallback(new GetAchievementsCallback(packetMsg.TargetJobID, getAchievementsResponse.Body, (msg) => msg.eresult));
+					Client.PostCallback(new GetAchievementsCallback(packetMsg.TargetJobID, getAchievementsResponse.Body));
 					break;
 				case EMsg.ClientStoreUserStatsResponse:
 					ClientMsgProtobuf<CMsgClientStoreUserStatsResponse> setAchievementsResponse = new(packetMsg);
-					Client.PostCallback(new SetAchievementsCallback(packetMsg.TargetJobID, setAchievementsResponse.Body, (msg) => msg.eresult));
+					Client.PostCallback(new SetAchievementsCallback(packetMsg.TargetJobID, setAchievementsResponse.Body));
 					break;
 			}
 
@@ -34,7 +34,7 @@ namespace ASFAchievementManager {
 			internal readonly T Response;
 			internal readonly bool Success;
 
-			internal AchievementsCallBack(JobID jobID, T msg, Func<T, int> eresult, string error) {
+			internal AchievementsCallBack(JobID jobID, T msg, Func<T, int> eresultGetter, string error) {
 				if (jobID == null) {
 					throw new ArgumentNullException(nameof(jobID));
 				}
@@ -44,7 +44,7 @@ namespace ASFAchievementManager {
 				}
 
 				JobID = jobID;
-				Success = (EResult) eresult(msg) == EResult.OK;
+				Success = (EResult) eresultGetter(msg) == EResult.OK;
 				Response = msg;
 
 				if (!Success) {
@@ -58,13 +58,13 @@ namespace ASFAchievementManager {
 		}
 
 		internal sealed class GetAchievementsCallback : AchievementsCallBack<CMsgClientGetUserStatsResponse> {
-			internal GetAchievementsCallback(JobID jobID, CMsgClientGetUserStatsResponse msg, Func<CMsgClientGetUserStatsResponse, int> eresult)
-				: base(jobID, msg, eresult, "GetAchievements") { }
+			internal GetAchievementsCallback(JobID jobID, CMsgClientGetUserStatsResponse msg)
+				: base(jobID, msg, msg => msg.eresult, "GetAchievements") { }
 		}
 
 		internal sealed class SetAchievementsCallback : AchievementsCallBack<CMsgClientStoreUserStatsResponse> {
-			internal SetAchievementsCallback(JobID jobID, CMsgClientStoreUserStatsResponse msg, Func<CMsgClientStoreUserStatsResponse, int> eresult)
-				: base(jobID, msg, eresult, "SetAchievements") { }
+			internal SetAchievementsCallback(JobID jobID, CMsgClientStoreUserStatsResponse msg)
+				: base(jobID, msg, msg => msg.eresult, "SetAchievements") { }
 		}
 
 		//Utilities
