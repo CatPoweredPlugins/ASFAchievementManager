@@ -34,7 +34,7 @@ namespace ASFAchievementManager {
 			internal readonly T Response;
 			internal readonly bool Success;
 
-			internal AchievementsCallBack(JobID jobID, T msg, Func<T, int> eresultGetter, string error) {
+			internal AchievementsCallBack(JobID jobID, T msg, Func<T, EResult> eresultGetter, string error) {
 				if (jobID == null) {
 					throw new ArgumentNullException(nameof(jobID));
 				}
@@ -44,7 +44,7 @@ namespace ASFAchievementManager {
 				}
 
 				JobID = jobID;
-				Success = (EResult) eresultGetter(msg) == EResult.OK;
+				Success = eresultGetter(msg) == EResult.OK;
 				Response = msg;
 
 				if (!Success) {
@@ -59,12 +59,12 @@ namespace ASFAchievementManager {
 
 		internal sealed class GetAchievementsCallback : AchievementsCallBack<CMsgClientGetUserStatsResponse> {
 			internal GetAchievementsCallback(JobID jobID, CMsgClientGetUserStatsResponse msg)
-				: base(jobID, msg, msg => msg.eresult, "GetAchievements") { }
+				: base(jobID, msg, msg => (EResult) msg.eresult, "GetAchievements") { }
 		}
 
 		internal sealed class SetAchievementsCallback : AchievementsCallBack<CMsgClientStoreUserStatsResponse> {
 			internal SetAchievementsCallback(JobID jobID, CMsgClientStoreUserStatsResponse msg)
-				: base(jobID, msg, msg => msg.eresult, "SetAchievements") { }
+				: base(jobID, msg, msg => (EResult) msg.eresult, "SetAchievements") { }
 		}
 
 		//Utilities
