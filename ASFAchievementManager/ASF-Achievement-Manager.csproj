@@ -13,12 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="SteamKit2">
-      <HintPath>..\ArchiSteamFarm\ArchiSteamFarm\lib\SteamKit2.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\ArchiSteamFarm\ArchiSteamFarm\ArchiSteamFarm.csproj" />
   </ItemGroup>
 
