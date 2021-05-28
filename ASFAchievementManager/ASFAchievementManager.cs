@@ -64,7 +64,7 @@ namespace ASFAchievementManager {
 
 		private static async Task<string?> ResponseAchievementList(ulong steamID, Bot bot, string appids) {
 
-			if (!bot.HasPermission(steamID, BotConfig.EPermission.Master)) {
+			if (!bot.HasAccess(steamID, BotConfig.EAccess.Master)) {
 				return null;
 			}
 
@@ -120,7 +120,7 @@ namespace ASFAchievementManager {
 
 
 		private static async Task<string?> ResponseAchievementSet(ulong steamID, Bot bot, string appid, string AchievementNumbers, bool set = true) {
-			if (!bot.HasPermission(steamID, BotConfig.EPermission.Master)) {
+			if (!bot.HasAccess(steamID, BotConfig.EAccess.Master)) {
 				return null;
 			}
 

@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using ArchiSteamFarm;
 using ArchiSteamFarm.Localization;
 using SteamKit2;
 using SteamKit2.Internal;
 using System.Globalization;
-using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace ASFAchievementManager {
 	public sealed class AchievementHandler : ClientMsgHandler {
-		ConcurrentDictionary<ulong, StoredResponse> Responses = new ConcurrentDictionary<ulong, StoredResponse>();
 		public override void HandleMsg(IPacketMsg packetMsg) {
 			if (packetMsg == null) {
 				ASF.ArchiLogger.LogNullError(nameof(packetMsg));
@@ -21,53 +19,52 @@ namespace ASFAchievementManager {
 
 			switch (packetMsg.MsgType) {
 				case EMsg.ClientGetUserStatsResponse:
-					HandleGetUserStatsResponse(packetMsg);
-
+					ClientMsgProtobuf<CMsgClientGetUserStatsResponse> getAchievementsResponse = new(packetMsg);
+					Client.PostCallback(new GetAchievementsCallback(packetMsg.TargetJobID, getAchievementsResponse.Body));
 					break;
 				case EMsg.ClientStoreUserStatsResponse:
-					HandleStoreUserStatsResponse(packetMsg);
-
+					ClientMsgProtobuf<CMsgClientStoreUserStatsResponse> setAchievementsResponse = new(packetMsg);
+					Client.PostCallback(new SetAchievementsCallback(packetMsg.TargetJobID, setAchievementsResponse.Body));
 					break;
 			}
 
 		}
 
-		private void HandleGetUserStatsResponse(IPacketMsg packetMsg) {
-			if (packetMsg == null) {
-				ASF.ArchiLogger.LogNullError(nameof(packetMsg));
-				return;
-			}
-			ClientMsgProtobuf<CMsgClientGetUserStatsResponse> response = new ClientMsgProtobuf<CMsgClientGetUserStatsResponse>(packetMsg);
-			if (!Responses.TryAdd(response.Body.game_id, new StoredResponse {
-				Success = response.Body.eresult == 1,
-				Response = response.Body
-			})) {
-				ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, "GetAchievements"));
+		internal abstract class AchievementsCallBack<T> : CallbackMsg {
+			internal readonly T Response;
+			internal readonly bool Success;
+
+			internal AchievementsCallBack(JobID jobID, T msg, Func<T, EResult> eresultGetter, string error) {
+				if (jobID == null) {
+					throw new ArgumentNullException(nameof(jobID));
+				}
+
+				if (msg == null) {
+					throw new ArgumentNullException(nameof(msg));
+				}
+
+				JobID = jobID;
+				Success = eresultGetter(msg) == EResult.OK;
+				Response = msg;
+
+				if (!Success) {
+					LogFailure(error);
+				}
 			}
 
-			if (response.Body.eresult != 1) {
-				ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, "GetAchievements"));
+			protected void LogFailure(string error) {
+				ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, error));
 			}
-
 		}
 
-		private void HandleStoreUserStatsResponse(IPacketMsg packetMsg) {
-			if (packetMsg == null) {
-				ASF.ArchiLogger.LogNullError(nameof(packetMsg));
-				return;
-			}
-			ClientMsgProtobuf<CMsgClientStoreUserStatsResponse> response = new ClientMsgProtobuf<CMsgClientStoreUserStatsResponse>(packetMsg);
-			if (!Responses.TryAdd(response.Body.game_id, new StoredResponse {
-				Success = response.Body.eresult == 1,
-				Response = null //we don't care about this, just need to know that request was successful
-			})) {
-				ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, "SetAchievements"));
-			}
+		internal sealed class GetAchievementsCallback : AchievementsCallBack<CMsgClientGetUserStatsResponse> {
+			internal GetAchievementsCallback(JobID jobID, CMsgClientGetUserStatsResponse msg)
+				: base(jobID, msg, msg => (EResult) msg.eresult, "GetAchievements") { }
+		}
 
-			if (response.Body.eresult != 1) {
-				ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, "SetAchievements"));
-			}
-
+		internal sealed class SetAchievementsCallback : AchievementsCallBack<CMsgClientStoreUserStatsResponse> {
+			internal SetAchievementsCallback(JobID jobID, CMsgClientStoreUserStatsResponse msg)
+				: base(jobID, msg, msg => (EResult) msg.eresult, "SetAchievements") { }
 		}
 
 		//Utilities
@@ -89,10 +86,8 @@ namespace ASFAchievementManager {
 						foreach (KeyValue Achievement in stat.Children.Find(Child => Child.Name == "bits")?.Children ?? new List<KeyValue>()) {
 							if (int.TryParse(Achievement.Name, out int bitNum)) {
 								if (uint.TryParse(stat.Name, out uint statNum)) {
-									bool isSet = false;
-									if ((Response.stats != null) && (Response.stats.Find(statElement => statElement.stat_id == statNum) != null)) {
-										isSet = (Response.stats.Find(statElement => statElement.stat_id == statNum)!.stat_value & ((uint) 1 << bitNum)) != 0;
-									};
+									uint? stat_value = Response?.stats?.Find(statElement => statElement.stat_id == statNum)?.stat_value;
+									bool isSet = stat_value != null && (stat_value & ((uint) 1 << bitNum)) != 0;
 
 									bool restricted = Achievement.Children.Find(Child => Child.Name == "permission") != null;
 
@@ -116,7 +111,8 @@ namespace ASFAchievementManager {
 										DependancyValue = dependancyValue,
 										DependancyName = dependancyName,
 										Dependancy = 0,
-										Name = name
+										Name = name,
+										StatValue = stat_value ?? 0
 									});
 
 								}
@@ -146,32 +142,32 @@ namespace ASFAchievementManager {
 			return result;
 		}
 
-		private void SetStat(List<CMsgClientStoreUserStats2.Stats> statsToSet, List<StatData> Stats, StoredResponse storedResponse, int achievementnum, bool set = true) {
-			if (achievementnum < 0 || achievementnum > Stats.Count) {
-				return; //it should never happen
+		private IEnumerable<CMsgClientStoreUserStats2.Stats> GetStatsToSet(List<CMsgClientStoreUserStats2.Stats> statsToSet, StatData statToSet, bool set = true) {
+			if (statToSet == null) {
+				yield break; //it should never happen
 			}
-			CMsgClientStoreUserStats2.Stats? currentstat = statsToSet.Find(stat => stat.stat_id == Stats[achievementnum].StatNum);
+
+			CMsgClientStoreUserStats2.Stats? currentstat = statsToSet.Find(stat => stat.stat_id == statToSet.StatNum);
 			if (currentstat == null) {
 				currentstat = new CMsgClientStoreUserStats2.Stats() {
-					stat_id = Stats[achievementnum].StatNum,
-					//stat_value = storedResponse.Response.stats.Find(stat => stat.stat_id == Stats[achievementnum].StatNum) != null ? storedResponse.Response.stats.Find(stat => stat.stat_id == Stats[achievementnum].StatNum).stat_value : 0
-					stat_value = storedResponse?.Response?.stats?.Find(stat => stat.stat_id == Stats[achievementnum].StatNum)?.stat_value ?? 0
+					stat_id = statToSet.StatNum,
+					stat_value = statToSet.StatValue
 				};
-				statsToSet.Add(currentstat);
+				yield return currentstat;
 			}
 			if (set) {
-				currentstat.stat_value = currentstat.stat_value | ((uint) 1 << Stats[achievementnum].BitNum);
+				currentstat.stat_value = currentstat.stat_value | ((uint) 1 << statToSet.BitNum);
 			} else {
-				currentstat.stat_value = currentstat.stat_value & ~((uint) 1 << Stats[achievementnum].BitNum);
+				currentstat.stat_value = currentstat.stat_value & ~((uint) 1 << statToSet.BitNum);
 			}
-			if (Stats[achievementnum].DependancyName != "") {
-				CMsgClientStoreUserStats2.Stats? dependancystat = statsToSet.Find(stat => stat.stat_id == Stats[achievementnum].Dependancy);
+			if (statToSet.DependancyName != "") {
+				CMsgClientStoreUserStats2.Stats? dependancystat = statsToSet.Find(stat => stat.stat_id == statToSet.Dependancy);
 				if (dependancystat == null) {
 					dependancystat = new CMsgClientStoreUserStats2.Stats() {
-						stat_id = Stats[achievementnum].Dependancy,
-						stat_value = set ? Stats[achievementnum].DependancyValue : 0
+						stat_id = statToSet.Dependancy,
+						stat_value = set ? statToSet.DependancyValue : 0
 					};
-					statsToSet.Add(dependancystat);
+					yield return dependancystat;
 				}
 			}
 
@@ -179,27 +175,12 @@ namespace ASFAchievementManager {
 
 		//Endpoints
 
-		internal string GetAchievements(Bot bot, ulong gameID) {
-
+		internal async Task<string> GetAchievements(Bot bot, ulong gameID) {
 			if (!Client.IsConnected) {
 				return Strings.BotNotConnected;
 			}
 
-			ClientMsgProtobuf<CMsgClientGetUserStats> request = new ClientMsgProtobuf<CMsgClientGetUserStats>(EMsg.ClientGetUserStats) {
-				Body = {
-					game_id =  gameID,
-					steam_id_for_user = bot.SteamID
-				}
-			};
-
-			Responses.TryRemove(gameID, out StoredResponse? Dummy);
-
-			Client.Send(request);
-			SpinWait.SpinUntil(() => Responses.ContainsKey(gameID), TimeSpan.FromSeconds(ASF.GlobalConfig?.ConnectionTimeout ?? GlobalConfig.DefaultConnectionTimeout));
-			//get stored data
-			if (!Responses.TryGetValue(gameID, out StoredResponse? response)) {
-				return "Can't retrieve achievements for " + gameID.ToString();
-			}
+			GetAchievementsCallback? response = await GetAchievementsResponse(bot, gameID);
 
 			if (response == null || response.Response == null || !response.Success) {
 				return "Can't retrieve achievements for " + gameID.ToString();
@@ -221,22 +202,21 @@ namespace ASFAchievementManager {
 			return responses.Count > 0 ? "\u200B\nAchievements for " + gameID.ToString() + ":\n" + string.Join(Environment.NewLine, responses) : "Can't retrieve achievements for " + gameID.ToString();
 		}
 
-		internal string SetAchievements(Bot bot, uint appId, HashSet<uint> achievements, bool set = true) {
+		internal async Task<string> SetAchievements(Bot bot, uint appId, HashSet<uint> achievements, bool set = true) {
 			if (!Client.IsConnected) {
 				return Strings.BotNotConnected;
 			}
+
 			List<string> responses = new List<string>();
-			string GetAchievementsResult = GetAchievements(bot, appId);
-			if (!Responses.TryGetValue(appId, out StoredResponse? response)) {
-				return GetAchievementsResult;
-			}
+
+			GetAchievementsCallback? response = await GetAchievementsResponse(bot, appId);
 			if (response == null) {
 				bot.ArchiLogger.LogNullError(nameof(response));
-				return GetAchievementsResult;
+				return "Can't retrieve achievements for " + appId.ToString(); ;
 			}
 
 			if (!response.Success) {
-				return GetAchievementsResult;
+				return "Can't retrieve achievements for " + appId.ToString(); ;
 			}
 
 			if (response.Response == null) {
@@ -254,9 +234,9 @@ namespace ASFAchievementManager {
 			List<CMsgClientStoreUserStats2.Stats> statsToSet = new List<CMsgClientStoreUserStats2.Stats>();
 
 			if (achievements.Count == 0) { //if no parameters provided - set/reset all. Don't kill me Archi.
-				for (int counter = 0; counter < Stats.Count; counter++) {
-					if (!Stats[counter].Restricted) {
-						SetStat(statsToSet, Stats, response, counter, set);
+				foreach (StatData stat in Stats) {
+					if (!stat.Restricted) {
+						statsToSet.AddRange(GetStatsToSet(statsToSet, stat, set));
 					}
 				}
 			} else {
@@ -265,6 +245,7 @@ namespace ASFAchievementManager {
 						responses.Add("Achievement #" + achievement.ToString() + " is out of range");
 						continue;
 					}
+
 					if (Stats[(int) achievement - 1].IsSet == set) {
 						responses.Add("Achievement #" + achievement.ToString() + " is already " + (set ? "unlocked" : "locked"));
 						continue;
@@ -273,7 +254,8 @@ namespace ASFAchievementManager {
 						responses.Add("Achievement #" + achievement.ToString() + " is protected and can't be switched");
 						continue;
 					}
-					SetStat(statsToSet, Stats, response, (int) achievement - 1, set);
+
+					statsToSet.AddRange(GetStatsToSet(statsToSet, Stats[(int) achievement - 1], set));
 				}
 			}
 			if (statsToSet.Count == 0) {
@@ -284,6 +266,7 @@ namespace ASFAchievementManager {
 				responses.Add("Trying to switch remaining achievements..."); //if some errors occured
 			}
 			ClientMsgProtobuf<CMsgClientStoreUserStats2> request = new ClientMsgProtobuf<CMsgClientStoreUserStats2>(EMsg.ClientStoreUserStats2) {
+				SourceJobID = Client.GetNextJobID(),
 				Body = {
 					game_id = (uint) appId,
 					settor_steam_id = (ulong)bot.SteamID,
@@ -293,16 +276,30 @@ namespace ASFAchievementManager {
 				}
 			};
 			request.Body.stats.AddRange(statsToSet);
-			Responses.TryRemove(appId, out StoredResponse? Dummy);
 			Client.Send(request);
-			SpinWait.SpinUntil(() => Responses.ContainsKey(appId), TimeSpan.FromSeconds(ASF.GlobalConfig?.ConnectionTimeout ?? GlobalConfig.DefaultConnectionTimeout));
-			if (!Responses.TryGetValue(appId, out StoredResponse? storeResponse)) {
-				responses.Add(Strings.WarningFailed);
-			}
-			responses.Add((storeResponse?.Success ?? false) ? Strings.Success : Strings.WarningFailed);
+
+			SetAchievementsCallback setResponse = await new AsyncJob<SetAchievementsCallback>(Client, request.SourceJobID).ToLongRunningTask().ConfigureAwait(false);
+
+			responses.Add((setResponse?.Success ?? false) ? Strings.Success : Strings.WarningFailed);
 			return "\u200B\n" + string.Join(Environment.NewLine, responses);
 		}
 
-	}
+		private async Task<GetAchievementsCallback?> GetAchievementsResponse(Bot bot, ulong gameID) {
+			if (!Client.IsConnected) {
+				return null;
+			}
 
+			ClientMsgProtobuf<CMsgClientGetUserStats> request = new ClientMsgProtobuf<CMsgClientGetUserStats>(EMsg.ClientGetUserStats) {
+				SourceJobID = Client.GetNextJobID(),
+				Body = {
+					game_id =  gameID,
+					steam_id_for_user = bot.SteamID,
+				}
+			};
+
+			Client.Send(request);
+
+			return await new AsyncJob<GetAchievementsCallback>(Client, request.SourceJobID).ToLongRunningTask().ConfigureAwait(false);
+		}
+	}
 }
