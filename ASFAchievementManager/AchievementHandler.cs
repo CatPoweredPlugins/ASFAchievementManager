@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using ArchiSteamFarm;
+using ArchiSteamFarm.Core;
+using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Localization;
 using SteamKit2;
 using SteamKit2.Internal;
