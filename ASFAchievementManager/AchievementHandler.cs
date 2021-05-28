@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Localization;
 using SteamKit2;
 using SteamKit2.Internal;
-using System.Globalization;
-using System.Threading.Tasks;
+
+
 
 namespace ASFAchievementManager {
 	public sealed class AchievementHandler : ClientMsgHandler {
@@ -49,13 +52,10 @@ namespace ASFAchievementManager {
 				Response = msg;
 
 				if (!Success) {
-					LogFailure(error);
+					ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, error));
 				}
 			}
 
-			protected void LogFailure(string error) {
-				ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorFailingRequest, error));
-			}
 		}
 
 		internal sealed class GetAchievementsCallback : AchievementsCallBack<CMsgClientGetUserStatsResponse> {
@@ -156,12 +156,14 @@ namespace ASFAchievementManager {
 				};
 				yield return currentstat;
 			}
+
+			uint statMask = ((uint) 1 << statToSet.BitNum);
 			if (set) {
-				currentstat.stat_value = currentstat.stat_value | ((uint) 1 << statToSet.BitNum);
+				currentstat.stat_value = currentstat.stat_value | statMask;
 			} else {
-				currentstat.stat_value = currentstat.stat_value & ~((uint) 1 << statToSet.BitNum);
+				currentstat.stat_value = currentstat.stat_value & ~statMask;
 			}
-			if (statToSet.DependancyName != "") {
+			if (!string.IsNullOrEmpty(statToSet.DependancyName)) {
 				CMsgClientStoreUserStats2.Stats? dependancystat = statsToSet.Find(stat => stat.stat_id == statToSet.Dependancy);
 				if (dependancystat == null) {
 					dependancystat = new CMsgClientStoreUserStats2.Stats() {
@@ -235,10 +237,8 @@ namespace ASFAchievementManager {
 			List<CMsgClientStoreUserStats2.Stats> statsToSet = new List<CMsgClientStoreUserStats2.Stats>();
 
 			if (achievements.Count == 0) { //if no parameters provided - set/reset all. Don't kill me Archi.
-				foreach (StatData stat in Stats) {
-					if (!stat.Restricted) {
+				foreach (StatData stat in Stats.Where(s => !s.Restricted)){
 						statsToSet.AddRange(GetStatsToSet(statsToSet, stat, set));
-					}
 				}
 			} else {
 				foreach (uint achievement in achievements) {
