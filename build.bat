@@ -21,7 +21,7 @@ if exist out rmdir /Q /S out
 
 rem release generic version
 
-dotnet publish -c "Release" -f "net5.0" -o "out/generic" "/p:LinkDuringPublish=false"
+dotnet publish -c "Release" -f "net6.0" -o "out/generic" "/p:LinkDuringPublish=false"
 mkdir .\out\%CurrDirName%
 copy .\out\generic\%CurrDirName%.dll .\out\%CurrDirName%
 7z a -tzip -mx7 .\out\%CurrDirName%.zip .\out\%CurrDirName%
