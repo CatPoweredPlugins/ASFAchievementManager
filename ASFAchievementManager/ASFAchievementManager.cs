@@ -23,7 +23,7 @@ namespace ASFAchievementManager {
 			return Task.CompletedTask;
 		}
 
-		public async Task<string?> OnBotCommand(Bot bot, EAccess _, string message, string[] args, ulong steamID = 0) {
+		public async Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) {
 			switch (args.Length) {
 				case 0:
 					bot.ArchiLogger.LogNullError(nameof(args));
@@ -35,12 +35,12 @@ namespace ASFAchievementManager {
 					};
 				default:
 					return args[0].ToUpperInvariant() switch {
-						"ALIST" when args.Length > 2 => await ResponseAchievementList(steamID, args[1], Utilities.GetArgsAsText(args, 2, ",")).ConfigureAwait(false),
-						"ALIST" => await ResponseAchievementList(steamID, bot, args[1]).ConfigureAwait(false),
-						"ASET" when args.Length > 3 => await ResponseAchievementSet(steamID, args[1], args[2], Utilities.GetArgsAsText(args, 3, ","), true).ConfigureAwait(false),
-						"ASET" when args.Length > 2 => await ResponseAchievementSet(steamID, bot, args[1], Utilities.GetArgsAsText(args, 2, ","), true).ConfigureAwait(false),
-						"ARESET" when args.Length > 3 => await ResponseAchievementSet(steamID, args[1], args[2], Utilities.GetArgsAsText(args, 3, ","), false).ConfigureAwait(false),
-						"ARESET" when args.Length > 2 => await ResponseAchievementSet(steamID, bot, args[1], Utilities.GetArgsAsText(args, 2, ","), false).ConfigureAwait(false),
+						"ALIST" when args.Length > 2 => await ResponseAchievementList(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, ",")).ConfigureAwait(false),
+						"ALIST" => await ResponseAchievementList(access, bot, args[1]).ConfigureAwait(false),
+						"ASET" when args.Length > 3 => await ResponseAchievementSet(access, steamID, args[1], args[2], Utilities.GetArgsAsText(args, 3, ","), true).ConfigureAwait(false),
+						"ASET" when args.Length > 2 => await ResponseAchievementSet(access, bot, args[1], Utilities.GetArgsAsText(args, 2, ","), true).ConfigureAwait(false),
+						"ARESET" when args.Length > 3 => await ResponseAchievementSet(access, steamID, args[1], args[2], Utilities.GetArgsAsText(args, 3, ","), false).ConfigureAwait(false),
+						"ARESET" when args.Length > 2 => await ResponseAchievementSet(access, bot, args[1], Utilities.GetArgsAsText(args, 2, ","), false).ConfigureAwait(false),
 						_ => null,
 					};
 			}
@@ -56,8 +56,8 @@ namespace ASFAchievementManager {
 
 		//Responses
 
-		private static async Task<string?> ResponseAchievementList(ulong steamID, Bot bot, string appids) {
-			if (bot.GetAccess(steamID) < EAccess.Master) {
+		private static async Task<string?> ResponseAchievementList(EAccess access, Bot bot, string appids) {
+			if (access < EAccess.Master) {
 				return null;
 			}
 
@@ -96,7 +96,7 @@ namespace ASFAchievementManager {
 
 		}
 
-		private static async Task<string?> ResponseAchievementList(ulong steamID, string botNames, string appids) {
+		private static async Task<string?> ResponseAchievementList(EAccess access, ulong steamID, string botNames, string appids) {
 
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
@@ -104,7 +104,7 @@ namespace ASFAchievementManager {
 				return Commands.FormatStaticResponse(string.Format(Strings.BotNotFound, botNames));
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseAchievementList(steamID, bot, appids))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseAchievementList(Commands.GetProxyAccess(bot, access, steamID), bot, appids))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !string.IsNullOrEmpty(result)));
 
@@ -112,8 +112,8 @@ namespace ASFAchievementManager {
 		}
 
 
-		private static async Task<string?> ResponseAchievementSet(ulong steamID, Bot bot, string appid, string achievementNumbers, bool set = true) {
-			if (bot.GetAccess(steamID) < EAccess.Master) {
+		private static async Task<string?> ResponseAchievementSet(EAccess access, Bot bot, string appid, string achievementNumbers, bool set = true) {
+			if (access < EAccess.Master) {
 				return null;
 			}
 
@@ -152,7 +152,7 @@ namespace ASFAchievementManager {
 			return bot.Commands.FormatBotResponse(await Task.Run<string>(() => AchievementHandler.SetAchievements(bot, appId, achievements, set)).ConfigureAwait(false));
 		}
 
-		private static async Task<string?> ResponseAchievementSet(ulong steamID, string botNames, string appid, string achievementNumbers, bool set = true) {
+		private static async Task<string?> ResponseAchievementSet(EAccess access, ulong steamID, string botNames, string appid, string achievementNumbers, bool set = true) {
 
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
@@ -160,7 +160,7 @@ namespace ASFAchievementManager {
 				return Commands.FormatStaticResponse(string.Format(Strings.BotNotFound, botNames));
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseAchievementSet(steamID, bot, appid, achievementNumbers, set))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseAchievementSet(Commands.GetProxyAccess(bot, access, steamID), bot, appid, achievementNumbers, set))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !string.IsNullOrEmpty(result)));
 
