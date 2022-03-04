@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Interaction;
-using ArchiSteamFarm.Steam.Storage;
 using ArchiSteamFarm.Plugins.Interfaces;
 using ArchiSteamFarm.Localization;
 using SteamKit2;
@@ -14,7 +13,7 @@ using System.Collections.Concurrent;
 
 namespace ASFAchievementManager {
 	[Export(typeof(IPlugin))]
-	public sealed class ASFAchievementManager : IBotSteamClient, IBotCommand {
+	public sealed class ASFAchievementManager : IBotSteamClient, IBotCommand2 {
 		private static readonly ConcurrentDictionary<Bot, AchievementHandler> AchievementHandlers = new();
 		public string Name => "ASF Achievement Manager";
 		public Version Version => typeof(ASFAchievementManager).Assembly.GetName().Version ?? new Version("0");
@@ -24,8 +23,7 @@ namespace ASFAchievementManager {
 			return Task.CompletedTask;
 		}
 
-		public async Task<string?> OnBotCommand(Bot bot, ulong steamID, string message, string[] args) {
-
+		public async Task<string?> OnBotCommand(Bot bot, EAccess _, string message, string[] args, ulong steamID = 0) {
 			switch (args.Length) {
 				case 0:
 					bot.ArchiLogger.LogNullError(nameof(args));
@@ -59,8 +57,7 @@ namespace ASFAchievementManager {
 		//Responses
 
 		private static async Task<string?> ResponseAchievementList(ulong steamID, Bot bot, string appids) {
-
-			if (!bot.HasAccess(steamID, BotConfig.EAccess.Master)) {
+			if (bot.GetAccess(steamID) < EAccess.Master) {
 				return null;
 			}
 
@@ -116,7 +113,7 @@ namespace ASFAchievementManager {
 
 
 		private static async Task<string?> ResponseAchievementSet(ulong steamID, Bot bot, string appid, string achievementNumbers, bool set = true) {
-			if (!bot.HasAccess(steamID, BotConfig.EAccess.Master)) {
+			if (bot.GetAccess(steamID) < EAccess.Master) {
 				return null;
 			}
 
