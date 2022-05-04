@@ -26,7 +26,7 @@ namespace ASFAchievementManager {
 		public async Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) {
 			switch (args.Length) {
 				case 0:
-					bot.ArchiLogger.LogNullError(nameof(args));
+					bot.ArchiLogger.LogNullError(null, nameof(args));
 
 					return null;
 				case 1:
@@ -68,7 +68,7 @@ namespace ASFAchievementManager {
 			}
 			if (AchievementHandlers.TryGetValue(bot, out AchievementHandler? AchievementHandler)) {
 				if (AchievementHandler == null) {
-					bot.ArchiLogger.LogNullError(nameof(AchievementHandler));
+					bot.ArchiLogger.LogNullError(AchievementHandler);
 					return null;
 				}
 
@@ -129,7 +129,7 @@ namespace ASFAchievementManager {
 			}
 
 			if (AchievementHandler == null) {
-				bot.ArchiLogger.LogNullError(nameof(AchievementHandler));
+				bot.ArchiLogger.LogNullError(AchievementHandler);
 				return null;
 			}
 

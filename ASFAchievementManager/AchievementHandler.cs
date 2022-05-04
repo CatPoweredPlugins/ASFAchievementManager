@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -16,7 +16,7 @@ namespace ASFAchievementManager {
 	public sealed class AchievementHandler : ClientMsgHandler {
 		public override void HandleMsg(IPacketMsg packetMsg) {
 			if (packetMsg == null) {
-				ASF.ArchiLogger.LogNullError(nameof(packetMsg));
+				ASF.ArchiLogger.LogNullError(packetMsg);
 
 				return;
 			}
@@ -192,9 +192,9 @@ namespace ASFAchievementManager {
 			List<string> responses = new List<string>();
 			List<StatData>? Stats = ParseResponse(response.Response);
 			if (Stats == null) {
-				bot.ArchiLogger.LogNullError(nameof(Stats));
+				bot.ArchiLogger.LogNullError(Stats);
 			} else if (Stats.Count == 0) {
-				bot.ArchiLogger.LogNullError(nameof(Stats));
+				bot.ArchiLogger.LogNullError(null, nameof(Stats));
 			} else {
 
 				foreach (StatData stat in Stats) {
@@ -214,7 +214,7 @@ namespace ASFAchievementManager {
 
 			GetAchievementsCallback? response = await GetAchievementsResponse(bot, appId);
 			if (response == null) {
-				bot.ArchiLogger.LogNullError(nameof(response));
+				bot.ArchiLogger.LogNullError(response);
 				return "Can't retrieve achievements for " + appId.ToString(); ;
 			}
 
@@ -223,7 +223,7 @@ namespace ASFAchievementManager {
 			}
 
 			if (response.Response == null) {
-				bot.ArchiLogger.LogNullError(nameof(response.Response));
+				bot.ArchiLogger.LogNullError(response.Response);
 				responses.Add(Strings.WarningFailed);
 				return "\u200B\n" + string.Join(Environment.NewLine, responses);
 			}
