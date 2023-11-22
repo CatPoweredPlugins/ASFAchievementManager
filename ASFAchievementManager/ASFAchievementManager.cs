@@ -19,7 +19,7 @@ namespace ASFAchievementManager {
 		public Version Version => typeof(ASFAchievementManager).Assembly.GetName().Version ?? new Version("0");
 
 		public Task OnLoaded() {
-			ASF.ArchiLogger.LogGenericInfo("ASF Achievement Manager Plugin by Ryzhehvost, powered by ginger cats");
+			ASF.ArchiLogger.LogGenericInfo("ASF Achievement Manager Plugin by Rudokhvist, powered by ginger cats");
 			return Task.CompletedTask;
 		}
 
