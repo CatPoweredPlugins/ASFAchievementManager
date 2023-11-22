@@ -7,7 +7,7 @@ This plugin is provided on AS-IS basis, without any guarantee at all. Author is 
 This plugin for [ASF](https://github.com/JustArchiNET/ArchiSteamFarm/) allows you to view, set and reset achievements in steam games, similar to [SAM](https://github.com/gibbed/SteamAchievementManager). Works only with ASF v4.0+ (make sure to check actual required version in release notes). 
 
 ## Installation
-- download .zip file from [latest release](https://github.com/Ryzhehvost/ASF-Achievement-Manager/releases/latest), in most cases you need `ASF-Achievement-Manager.zip`, but if you use ASF-generic-netf.zip (you really need a strong reason to do that) download `ASF-Achievement-Manager-netf.zip`.
+- download .zip file from [latest release](https://github.com/Rudokhvist/ASF-Achievement-Manager/releases/latest), in most cases you need `ASF-Achievement-Manager.zip`, but if you use ASF-generic-netf.zip (you really need a strong reason to do that) download `ASF-Achievement-Manager-netf.zip`.
 - unpack downloaded .zip file to `plugins` folder inside your ASF folder.
 - (re)start ASF, you should get a message indicating that plugin loaded successfully. 
 
@@ -50,7 +50,7 @@ You can get support for this plugin in https://steamcommunity.com/groups/Ryzhepl
 Этот плагин для [ASF](https://github.com/JustArchiNET/ArchiSteamFarm/) позволяет просматривать, включать и выключать достижения в играх Steam, аналогично программе [SAM](https://github.com/gibbed/SteamAchievementManager).  Работает только в ASF 4.0+ (не забудьте проверить реально требуемую версию в информации о релизе).
 
 ## Установка
-- скачайте файл .zip из [последнего релиза](https://github.com/Ryzhehvost/ASF-Achievement-Manager/releases/latest), в большинстве случаев вам нужен файл `ASF-Achievement-Managerm.zip`, не если вы по какой-то причине пользуетесь ASF-generic-netf.zip (а для этого нужны веские причины) - скачайте `ASF-Achievement-Manager-netf.zip`.
+- скачайте файл .zip из [последнего релиза](https://github.com/Rudokhvist/ASF-Achievement-Manager/releases/latest), в большинстве случаев вам нужен файл `ASF-Achievement-Managerm.zip`, не если вы по какой-то причине пользуетесь ASF-generic-netf.zip (а для этого нужны веские причины) - скачайте `ASF-Achievement-Manager-netf.zip`.
 - распакуйте скачанный файл .zip в папку `plugins` внутри вашей папки с ASF.
 - (пере)запустите ASF, вы должны получить сообщение что плагин успешно загружен. 
 
@@ -82,4 +82,4 @@ Examples:<br/>
   
  Помощь по этому плагину вы можете получить в https://steamcommunity.com/groups/Ryzheplugins (или просто используйте раздел issues)
 
-![downloads](https://img.shields.io/github/downloads/Ryzhehvost/ASF-Achievement-Manager/total.svg?style=social)
+![downloads](https://img.shields.io/github/downloads/Rudokhvist/ASF-Achievement-Manager/total.svg?style=social)
