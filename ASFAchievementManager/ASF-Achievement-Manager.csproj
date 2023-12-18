@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <Authors>Rudokhvist</Authors>
-    <AssemblyVersion>0.2.2.2</AssemblyVersion>
-    <TargetFrameworks>net6.0;net48</TargetFrameworks>
+    <AssemblyVersion>0.3.0.0</AssemblyVersion>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
