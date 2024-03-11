@@ -95,15 +95,33 @@ namespace ASFAchievementManager {
 									string? dependancyName = (Achievement.Children.Find(Child => Child.Name == "progress") == null) ? "" : Achievement.Children.Find(Child => Child.Name == "progress")?.Children?.Find(Child => Child.Name == "value")?.Children?.Find(Child => Child.Name == "operand1")?.Value;
 
 									uint.TryParse((Achievement.Children.Find(Child => Child.Name == "progress") == null) ? "0" : Achievement.Children.Find(Child => Child.Name == "progress")!.Children.Find(Child => Child.Name == "max_val")?.Value, out uint dependancyValue);
-									string lang = CultureInfo.CurrentUICulture.EnglishName.ToLower();
-									if (lang.IndexOf('(') > 0) {
-										lang = lang.Substring(0, lang.IndexOf('(') - 1);
-									}
-									if (Achievement.Children.Find(Child => Child.Name == "display")?.Children?.Find(Child => Child.Name == "name")?.Children?.Find(Child => Child.Name == lang) == null) {
-										lang = "english";//fallback to english
-									}
+                                    string lang = CultureInfo.CurrentUICulture.EnglishName.ToLower();
 
-									string? name = Achievement.Children.Find(Child => Child.Name == "display")?.Children?.Find(Child => Child.Name == "name")?.Children?.Find(Child => Child.Name == lang)?.Value;
+                                    Dictionary<string, string> countryLanguageMap = new()
+                                    {
+                                            { "portuguese (brazil)", "brazilian" },
+                                            { "korean", "koreana" },
+                                            { "chinese (traditional)", "tchinese" },
+                                            { "chinese (simplified)", "schinese" }
+                                    };
+
+                                    if (countryLanguageMap.ContainsKey(lang))
+                                    {
+                                        lang = countryLanguageMap[lang];
+                                    }
+                                    else
+                                    {
+                                        if (lang.IndexOf('(') > 0)
+                                        {
+                                            lang = lang.Substring(0, lang.IndexOf('(') - 1);
+                                        }
+                                    }
+                                    if (Achievement.Children.Find(Child => Child.Name == "display")?.Children?.Find(Child => Child.Name == "name")?.Children?.Find(Child => Child.Name == lang) == null)
+                                    {
+                                        lang = "english"; // Fallback
+                                    }
+
+                                    string? name = Achievement.Children.Find(Child => Child.Name == "display")?.Children?.Find(Child => Child.Name == "name")?.Children?.Find(Child => Child.Name == lang)?.Value;
 									result.Add(new StatData() {
 										StatNum = statNum,
 										BitNum = bitNum,
