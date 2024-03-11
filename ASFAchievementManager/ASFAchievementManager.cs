@@ -10,13 +10,20 @@ using ArchiSteamFarm.Localization;
 using SteamKit2;
 using System.Linq;
 using System.Collections.Concurrent;
+using System.Text.Json;
+using System.Globalization;
 
 namespace ASFAchievementManager {
+
 	[Export(typeof(IPlugin))]
-	public sealed class ASFAchievementManager : IBotSteamClient, IBotCommand2 {
+	public sealed class ASFAchievementManager : IBotSteamClient, IBotCommand2, IASF {
 		private static readonly ConcurrentDictionary<Bot, AchievementHandler> AchievementHandlers = new();
 		public string Name => "ASF Achievement Manager";
 		public Version Version => typeof(ASFAchievementManager).Assembly.GetName().Version ?? new Version("0");
+
+		public static CultureInfo? AchievementsCulture { get; private set; }
+
+		private static readonly char[] Separator = [','];
 
 		public Task OnLoaded() {
 			ASF.ArchiLogger.LogGenericInfo("ASF Achievement Manager Plugin by Rudokhvist, powered by ginger cats");
@@ -61,7 +68,7 @@ namespace ASFAchievementManager {
 				return null;
 			}
 
-			string[] gameIDs = appids.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+			string[] gameIDs = appids.Split(Separator, StringSplitOptions.RemoveEmptyEntries);
 
 			if (gameIDs.Length == 0) {
 				return bot.Commands.FormatBotResponse(string.Format(Strings.ErrorIsEmpty, nameof(gameIDs)));
@@ -72,7 +79,7 @@ namespace ASFAchievementManager {
 					return null;
 				}
 
-				HashSet<uint> gamesToGetAchievements = new();
+				HashSet<uint> gamesToGetAchievements = [];
 
 				foreach (string game in gameIDs) {
 					if (!uint.TryParse(game, out uint gameID) || (gameID == 0)) {
@@ -133,9 +140,9 @@ namespace ASFAchievementManager {
 				return null;
 			}
 
-			HashSet<uint> achievements = new();
+			HashSet<uint> achievements = [];
 
-			string[] achievementStrings = achievementNumbers.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+			string[] achievementStrings = achievementNumbers.Split(Separator, StringSplitOptions.RemoveEmptyEntries);
 
 			if (!achievementNumbers.Equals("*")) {
 				foreach (string achievement in achievementStrings) {
@@ -167,6 +174,29 @@ namespace ASFAchievementManager {
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 
-	}
+		public Task OnASFInit(IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
+			if (additionalConfigProperties != null) {
+				foreach (KeyValuePair<string, JsonElement> configProperty in additionalConfigProperties) {
+					switch (configProperty.Key) {
+						case "Rudokhvist.AchievementsCulture" when configProperty.Value.ValueKind == JsonValueKind.String: {
+								string configCulture = configProperty.Value.ToString();
+								try {
+									AchievementsCulture = CultureInfo.CreateSpecificCulture(configCulture);
+								} catch (Exception) {
+									AchievementsCulture = null;
+									ASF.ArchiLogger.LogGenericError(Strings.ErrorInvalidCurrentCulture);
+								}
+								ASF.ArchiLogger.LogGenericInfo("Culture for achievement names was set to " + configCulture);
+								break;
+							}
+
+					}
+				}
+			}
+			return Task.CompletedTask;
+		}
+
+
+	};
 
 }

@@ -37,49 +37,16 @@ Examples:<br/>
   `areset bot1..bot3 370910 2`<br/>
   `areset bot1 370910 *`
 
-You can get support for this plugin in https://steamcommunity.com/groups/Ryzheplugins (or just use github issues).
+## Configuration
+This plugins adds one additional property in global ASF config (asf.json).
 
----
+### `Rudokhvist.AchievementsCulture`
+Property of `string` type, with default value equal to `null`, that determines in what language you want to see achievement names, if available. If value is `null`, or invalid culture is provided, plugin will fallback to the global culture set in ASF (see [`CurrentCulture`](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Configuration#currentculture)).
+Accepted values are the same as for [`CurrentCulture`](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Configuration#currentculture) global ASF property, but please note that only languages actually provided in steam could be displayed, if there is no specified language provided in Steam - plugin will fallback to English names.
 
-# Менеджер достижений для ASF
+Example:
 
-# ОТКАЗ ОТ ОТВЕТСВЕННОСТИ
-Этот плагин предоставляется по принципу "КАК ЕСТЬ", без каких-либо гарантий. Автор не несёт никакой ответсвенности за любой прямой или непрямой ущерб, который может быть следствием использования этого плагина. Вы используете этот плагин на свой страх и риск.
+`"Rudokhvist.AchievementsCulture":"uk-UA"`
 
-## Введение 
-Этот плагин для [ASF](https://github.com/JustArchiNET/ArchiSteamFarm/) позволяет просматривать, включать и выключать достижения в играх Steam, аналогично программе [SAM](https://github.com/gibbed/SteamAchievementManager).  Работает только в ASF 4.0+ (не забудьте проверить реально требуемую версию в информации о релизе).
-
-## Установка
-- скачайте файл .zip из [последнего релиза](https://github.com/Rudokhvist/ASF-Achievement-Manager/releases/latest), в большинстве случаев вам нужен файл `ASF-Achievement-Managerm.zip`, не если вы по какой-то причине пользуетесь ASF-generic-netf.zip (а для этого нужны веские причины) - скачайте `ASF-Achievement-Manager-netf.zip`.
-- распакуйте скачанный файл .zip в папку `plugins` внутри вашей папки с ASF.
-- (пере)запустите ASF, вы должны получить сообщение что плагин успешно загружен. 
-
-## Использовение
-После установки, вы можете использовать следующие команды (только с аккаунта с правами Master+):
-
-### `alist <bots> <appids>`
-Отображает список и текущее состояние достижений в указанных играх для заданных ботов. Вы можете указать нескольких ботов и несколько appid.<br/>
-Пример работы программы:<br/>
-![пример работы alist](https://i.imgur.com/IiRnH81.png)<br/>
-Открытые достижения отмечены как ✅, ещё закрытые - как ❌. Если рядом с достижением стоит отметка ⚠️ - это означает что это серверное достижение, и его состояние невозможно переключать с помощью этого плагина.<br/>
-Examples:<br/>
-  `alist bot1 370910,730`<br/>
-  `alist bot1,bot2 370910`
-  
-### `aset <bots> <appid> <achievements>`
-Включает (открывает) достижения с указанными номерами в заданной игре на заданных ботах. Обратите внимание, что в отличии от команды `alist`, вы можете указать только один appid. Номера достижений соответствуют тем, которые выводит команда `alist`. Вы можете вместо списка с номерами достижений указать `*` чтобы включить все доступные достижения.<br/>
-Примеры:<br/>
-  `aset bot1 370910 1,2,5`<br/>
-  `aset bot1,bot2 370910 1`<br/>
-  `aset bot1 370910 *`
-  
-### `areset <bots> <appid> <achievements>`
-Выключает (закрывает) достижения с указанными номерами в заданной игре на заданных ботах. Обратите внимание, что в отличии от команды `alist`, вы можете указать только один appid. Номера достижений соответствуют тем, которые выводит команда `alist`. Вы можете вместо списка с номерами достижений указать `*` чтобы выключить все доступные достижения.<br/>
-Примеры:<br/>
-  `areset bot1 370910 1,2,5`<br/>
-  `areset bot1..bot3 370910 2`<br/>
-  `areset bot1 370910 *`
-  
- Помощь по этому плагину вы можете получить в https://steamcommunity.com/groups/Ryzheplugins (или просто используйте раздел issues)
 
 ![downloads](https://img.shields.io/github/downloads/Rudokhvist/ASF-Achievement-Manager/total.svg?style=social)

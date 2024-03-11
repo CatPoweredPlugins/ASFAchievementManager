@@ -39,9 +39,7 @@ namespace ASFAchievementManager {
 			internal readonly bool Success;
 
 			internal AchievementsCallBack(JobID jobID, T msg, Func<T, EResult> eresultGetter, string error) {
-				if (jobID == null) {
-					throw new ArgumentNullException(nameof(jobID));
-				}
+				ArgumentNullException.ThrowIfNull(jobID);
 
 				if (msg == null) {
 					throw new ArgumentNullException(nameof(msg));
@@ -70,58 +68,59 @@ namespace ASFAchievementManager {
 
 		//Utilities
 
-		private List<StatData>? ParseResponse(CMsgClientGetUserStatsResponse Response) {
-			List<StatData> result = new List<StatData>();
-			KeyValue KeyValues = new KeyValue();
-			if (Response.schema != null) {
-				using (MemoryStream ms = new MemoryStream(Response.schema)) {
+		private static List<StatData>? ParseResponse(CMsgClientGetUserStatsResponse response) {
+			List<StatData> result = [];
+			KeyValue KeyValues = new();
+			if (response.schema != null) {
+				using (MemoryStream ms = new(response.schema)) {
 					if (!KeyValues.TryReadAsBinary(ms)) {
-						ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorIsInvalid, nameof(Response.schema)));
+						ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorIsInvalid, nameof(response.schema)));
 						return null;
 					};
 				}
 
 				//first we enumerate all real achievements
-				foreach (KeyValue stat in KeyValues.Children.Find(Child => Child.Name == "stats")?.Children ?? new List<KeyValue>()) {
-					if (stat.Children.Find(Child => Child.Name == "type")?.Value == "4") {
-						foreach (KeyValue Achievement in stat.Children.Find(Child => Child.Name == "bits")?.Children ?? new List<KeyValue>()) {
+				foreach (KeyValue stat in KeyValues.Children.Find(child => child.Name == "stats")?.Children ?? []) {
+					if (stat.Children.Find(child => child.Name == "type")?.Value == "4") {
+						foreach (KeyValue Achievement in stat.Children.Find(child => child.Name == "bits")?.Children ?? []) {
 							if (int.TryParse(Achievement.Name, out int bitNum)) {
 								if (uint.TryParse(stat.Name, out uint statNum)) {
-									uint? stat_value = Response?.stats?.Find(statElement => statElement.stat_id == statNum)?.stat_value;
+									uint? stat_value = response?.stats?.Find(statElement => statElement.stat_id == statNum)?.stat_value;
 									bool isSet = stat_value != null && (stat_value & ((uint) 1 << bitNum)) != 0;
 
-									bool restricted = Achievement.Children.Find(Child => Child.Name == "permission") != null;
+									bool restricted = Achievement.Children.Find(child => child.Name == "permission") != null;
 
-									string? dependancyName = (Achievement.Children.Find(Child => Child.Name == "progress") == null) ? "" : Achievement.Children.Find(Child => Child.Name == "progress")?.Children?.Find(Child => Child.Name == "value")?.Children?.Find(Child => Child.Name == "operand1")?.Value;
+									string? dependancyName = (Achievement.Children.Find(child => child.Name == "progress") == null) ? "" : Achievement.Children.Find(child => child.Name == "progress")?.Children?.Find(child => child.Name == "value")?.Children?.Find(child => child.Name == "operand1")?.Value;
 
-									uint.TryParse((Achievement.Children.Find(Child => Child.Name == "progress") == null) ? "0" : Achievement.Children.Find(Child => Child.Name == "progress")!.Children.Find(Child => Child.Name == "max_val")?.Value, out uint dependancyValue);
-                                    string lang = CultureInfo.CurrentUICulture.EnglishName.ToLower();
+									if (!uint.TryParse((Achievement.Children.Find(child => child.Name == "progress") == null) ? "0" : Achievement.Children.Find(child => child.Name == "progress")!.Children.Find(child => child.Name == "max_val")?.Value, out uint dependancyValue)) {
+										ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorIsInvalid, nameof(dependancyValue)));
+										return null;
+									}
 
-                                    Dictionary<string, string> countryLanguageMap = new()
-                                    {
-                                            { "portuguese (brazil)", "brazilian" },
-                                            { "korean", "koreana" },
-                                            { "chinese (traditional)", "tchinese" },
-                                            { "chinese (simplified)", "schinese" }
-                                    };
+									string lang = ASFAchievementManager.AchievementsCulture == null ?
+														CultureInfo.CurrentUICulture.EnglishName.ToLower() :
+														ASFAchievementManager.AchievementsCulture.EnglishName.ToLower();
 
-                                    if (countryLanguageMap.ContainsKey(lang))
-                                    {
-                                        lang = countryLanguageMap[lang];
-                                    }
-                                    else
-                                    {
-                                        if (lang.IndexOf('(') > 0)
-                                        {
-                                            lang = lang.Substring(0, lang.IndexOf('(') - 1);
-                                        }
-                                    }
-                                    if (Achievement.Children.Find(Child => Child.Name == "display")?.Children?.Find(Child => Child.Name == "name")?.Children?.Find(Child => Child.Name == lang) == null)
-                                    {
-                                        lang = "english"; // Fallback
-                                    }
+									Dictionary<string, string> countryLanguageMap = new()
+									{
+											{ "portuguese (brazil)", "brazilian" },
+											{ "korean", "koreana" },
+											{ "chinese (traditional)", "tchinese" },
+											{ "chinese (simplified)", "schinese" }
+									};
 
-                                    string? name = Achievement.Children.Find(Child => Child.Name == "display")?.Children?.Find(Child => Child.Name == "name")?.Children?.Find(Child => Child.Name == lang)?.Value;
+									if (countryLanguageMap.TryGetValue(lang, out string? value)) {
+										lang = value;
+									} else {
+										if (lang.IndexOf('(') > 0) {
+											lang = lang[..(lang.IndexOf('(') - 1)];
+										}
+									}
+									if (Achievement.Children.Find(child => child.Name == "display")?.Children?.Find(child => child.Name == "name")?.Children?.Find(child => child.Name == lang) == null) {
+										lang = "english"; // Fallback
+									}
+
+									string? name = Achievement.Children.Find(child => child.Name == "display")?.Children?.Find(child => child.Name == "name")?.Children?.Find(child => child.Name == lang)?.Value;
 									result.Add(new StatData() {
 										StatNum = statNum,
 										BitNum = bitNum,
@@ -140,11 +139,11 @@ namespace ASFAchievementManager {
 					}
 				}
 				//Now we update all dependancies
-				foreach (KeyValue stat in KeyValues.Children.Find(Child => Child.Name == "stats")?.Children ?? new List<KeyValue>()) {
-					if (stat.Children.Find(Child => Child.Name == "type")?.Value == "1") {
+				foreach (KeyValue stat in KeyValues.Children.Find(child => child.Name == "stats")?.Children ?? []) {
+					if (stat.Children.Find(child => child.Name == "type")?.Value == "1") {
 						if (uint.TryParse(stat.Name, out uint statNum)) {
-							bool restricted = stat.Children.Find(Child => Child.Name == "permission") != null;
-							string? name = stat.Children.Find(Child => Child.Name == "name")?.Value;
+							bool restricted = stat.Children.Find(child => child.Name == "permission") != null;
+							string? name = stat.Children.Find(child => child.Name == "name")?.Value;
 							if (name != null) {
 								StatData? ParentStat = result.Find(item => item.DependancyName == name);
 								if (ParentStat != null) {
@@ -161,7 +160,7 @@ namespace ASFAchievementManager {
 			return result;
 		}
 
-		private IEnumerable<CMsgClientStoreUserStats2.Stats> GetStatsToSet(List<CMsgClientStoreUserStats2.Stats> statsToSet, StatData statToSet, bool set = true) {
+		private static IEnumerable<CMsgClientStoreUserStats2.Stats> GetStatsToSet(List<CMsgClientStoreUserStats2.Stats> statsToSet, StatData statToSet, bool set = true) {
 			if (statToSet == null) {
 				yield break; //it should never happen
 			}
@@ -175,11 +174,11 @@ namespace ASFAchievementManager {
 				yield return currentstat;
 			}
 
-			uint statMask = ((uint) 1 << statToSet.BitNum);
+			uint statMask = (uint) 1 << statToSet.BitNum;
 			if (set) {
-				currentstat.stat_value = currentstat.stat_value | statMask;
+				currentstat.stat_value |= statMask;
 			} else {
-				currentstat.stat_value = currentstat.stat_value & ~statMask;
+				currentstat.stat_value &= ~statMask;
 			}
 			if (!string.IsNullOrEmpty(statToSet.DependancyName)) {
 				CMsgClientStoreUserStats2.Stats? dependancystat = statsToSet.Find(stat => stat.stat_id == statToSet.Dependancy);
@@ -207,7 +206,7 @@ namespace ASFAchievementManager {
 				return "Can't retrieve achievements for " + gameID.ToString();
 			}
 
-			List<string> responses = new List<string>();
+			List<string> responses = [];
 			List<StatData>? Stats = ParseResponse(response.Response);
 			if (Stats == null) {
 				bot.ArchiLogger.LogNullError(Stats);
@@ -228,16 +227,18 @@ namespace ASFAchievementManager {
 				return Strings.BotNotConnected;
 			}
 
-			List<string> responses = new List<string>();
+			List<string> responses = [];
 
 			GetAchievementsCallback? response = await GetAchievementsResponse(bot, appId);
 			if (response == null) {
 				bot.ArchiLogger.LogNullError(response);
-				return "Can't retrieve achievements for " + appId.ToString(); ;
+				return "Can't retrieve achievements for " + appId.ToString();
+				;
 			}
 
 			if (!response.Success) {
-				return "Can't retrieve achievements for " + appId.ToString(); ;
+				return "Can't retrieve achievements for " + appId.ToString();
+				;
 			}
 
 			if (response.Response == null) {
@@ -252,11 +253,11 @@ namespace ASFAchievementManager {
 				return "\u200B\n" + string.Join(Environment.NewLine, responses);
 			}
 
-			List<CMsgClientStoreUserStats2.Stats> statsToSet = new List<CMsgClientStoreUserStats2.Stats>();
+			List<CMsgClientStoreUserStats2.Stats> statsToSet = [];
 
 			if (achievements.Count == 0) { //if no parameters provided - set/reset all. Don't kill me Archi.
-				foreach (StatData stat in Stats.Where(s => !s.Restricted)){
-						statsToSet.AddRange(GetStatsToSet(statsToSet, stat, set));
+				foreach (StatData stat in Stats.Where(s => !s.Restricted)) {
+					statsToSet.AddRange(GetStatsToSet(statsToSet, stat, set));
 				}
 			} else {
 				foreach (uint achievement in achievements) {
@@ -284,7 +285,7 @@ namespace ASFAchievementManager {
 			if (responses.Count > 0) {
 				responses.Add("Trying to switch remaining achievements..."); //if some errors occured
 			}
-			ClientMsgProtobuf<CMsgClientStoreUserStats2> request = new ClientMsgProtobuf<CMsgClientStoreUserStats2>(EMsg.ClientStoreUserStats2) {
+			ClientMsgProtobuf<CMsgClientStoreUserStats2> request = new(EMsg.ClientStoreUserStats2) {
 				SourceJobID = Client.GetNextJobID(),
 				Body = {
 					game_id = (uint) appId,
@@ -308,7 +309,7 @@ namespace ASFAchievementManager {
 				return null;
 			}
 
-			ClientMsgProtobuf<CMsgClientGetUserStats> request = new ClientMsgProtobuf<CMsgClientGetUserStats>(EMsg.ClientGetUserStats) {
+			ClientMsgProtobuf<CMsgClientGetUserStats> request = new(EMsg.ClientGetUserStats) {
 				SourceJobID = Client.GetNextJobID(),
 				Body = {
 					game_id =  gameID,
