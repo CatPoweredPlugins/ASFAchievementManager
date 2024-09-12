@@ -2,7 +2,7 @@
 	<Import Project="ArchiSteamFarm/Directory.Build.props" />
 
 	<PropertyGroup>
-		<PluginName>ASFAchievementManager.sln</PluginName>
+		<PluginName>ASFAchievementManager</PluginName>
 		<Version>1.0.0.0</Version>
 	</PropertyGroup>
 
