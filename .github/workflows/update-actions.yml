@@ -1,0 +1,82 @@
+# This action is responsible for automatically updating workflows from ASF-PluginTemplate repo.
+# Please note that this WILL OVERWRITE all changes made to default workflows, as well as restore the ones you removed.
+# If you plan to edit or remove workflows provided by default - you should remove this file first.
+name: Plugin-update-actions
+
+on:
+  schedule:
+  - cron: '20 3 * * *'
+
+  workflow_dispatch:
+
+env:
+  # You can specify your own credentials if you'd like to, simply change ARCHIBOT_GPG_PRIVATE_KEY and/or ARCHIBOT_GITHUB_TOKEN secrets here to the ones you want to use
+  GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }} # Optional, if secret not provided, will skip signing commit with GPG key
+  PUSH_GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }} # Optional, if secret not provided, will use the default token
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout plugin code
+      uses: actions/checkout@v4.1.7
+      with:
+        show-progress: false
+        path: plugin
+        token: ${{ env.PUSH_GITHUB_TOKEN }}
+
+    - name: Checkout template
+      uses: actions/checkout@v4.1.7
+      with:
+        show-progress: false
+        repository: JustArchiNET/ASF-PluginTemplate
+        path: template
+        token: ${{ env.PUSH_GITHUB_TOKEN }}
+
+    - name: Import GPG key for signing
+      uses: crazy-max/ghaction-import-gpg@v6.1.0
+      if: ${{ env.GPG_PRIVATE_KEY != null }}
+      with:
+        gpg_private_key: ${{ env.GPG_PRIVATE_KEY }}
+        git_user_signingkey: true
+        git_commit_gpgsign: true
+
+    - name: Update workflows if needed
+      id: update
+      shell: sh
+      run: |
+        set -eu
+
+        cp -rf template/.github/workflows/*.* plugin/.github/workflows/
+
+        cd plugin
+
+        if ! git config --get user.email > /dev/null; then
+            git config --local user.email "action@github.com"
+        fi
+
+        if ! git config --get user.name > /dev/null; then
+            git config --local user.name "GitHub Action"
+        fi
+
+        if [ $(git status --porcelain | wc -c) -ne 0 ]; then
+          git add -A
+          git commit -m "Automatic workflows update from ASF-PluginTemplate"
+          echo "new_commits=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "new_commits=false" >> "$GITHUB_OUTPUT"
+        fi
+
+
+    - name: Push changes to the repo
+      if: ${{ steps.update.outputs.new_commits == 'true'}}
+      uses: ad-m/github-push-action@v0.8.0
+      with:
+        directory: plugin
+        github_token: ${{ env.PUSH_GITHUB_TOKEN }}
+        branch: ${{ github.ref }}

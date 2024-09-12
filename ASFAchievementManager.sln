@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.329
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ASFAchievementManager", "ASFAchievementManager\ASF-Achievement-Manager.csproj", "{D0352FDB-487E-488A-9B07-2D4F19425A39}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ASFAchievementManager", "ASFAchievementManager\ASFAchievementManager.csproj", "{D0352FDB-487E-488A-9B07-2D4F19425A39}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArchiSteamFarm", "ArchiSteamFarm\ArchiSteamFarm\ArchiSteamFarm.csproj", "{930573F9-3DA0-41E8-8E4E-C0476BA8F99C}"
 EndProject
