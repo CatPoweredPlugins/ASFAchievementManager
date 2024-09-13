@@ -92,7 +92,7 @@ public sealed class AchievementHandler : ClientMsgHandler {
 								uint? stat_value = response?.stats?.Find(statElement => statElement.stat_id == statNum)?.stat_value;
 								bool isSet = stat_value != null && (stat_value & ((uint) 1 << bitNum)) != 0;
 
-								bool restricted = achievement.Children.Find(child => child.Name == "permission") != null;
+								bool restricted = achievement.Children.Find(child => child.Name == "permission" && child.Value != null) != null;
 
 								string? dependancyName = (achievement.Children.Find(child => child.Name == "progress") == null) ? "" : achievement.Children.Find(child => child.Name == "progress")?.Children?.Find(child => child.Name == "value")?.Children?.Find(child => child.Name == "operand1")?.Value;
 
@@ -146,7 +146,7 @@ public sealed class AchievementHandler : ClientMsgHandler {
 			foreach (KeyValue stat in keyValues.Children.Find(child => child.Name == "stats")?.Children ?? []) {
 				if (stat.Children.Find(child => child.Name == "type")?.Value == "1") {
 					if (uint.TryParse(stat.Name, out uint statNum)) {
-						bool restricted = stat.Children.Find(child => child.Name == "permission") != null;
+						bool restricted = int.TryParse(stat.Children.Find(child => child.Name == "permission")?.Value, out int value) && value > 1;
 						string? name = stat.Children.Find(child => child.Name == "name")?.Value;
 						if (name != null) {
 							StatData? parentStat = result.Find(item => item.DependancyName == name);
