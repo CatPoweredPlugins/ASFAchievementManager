@@ -12,6 +12,8 @@ using System.Linq;
 using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Globalization;
+using ArchiSteamFarm.Web.GitHub.Data;
+using ArchiSteamFarm.Web.GitHub;
 
 namespace ASFAchievementManager;
 
@@ -23,7 +25,56 @@ internal sealed class ASFAchievementManager : IBotSteamClient, IBotCommand2, IAS
 
 	public static CultureInfo? AchievementsCulture { get; private set; }
 
-	public string RepositoryName => "Rudokhvist/ASFAchievementManager";
+	public string RepositoryName => "CatPoweredPlugins/ASFAchievementManager";
+
+	public async Task<Uri?> GetTargetReleaseURL(Version asfVersion, string asfVariant, bool asfUpdate, bool stable, bool forced) {
+		ArgumentNullException.ThrowIfNull(asfVersion);
+		ArgumentException.ThrowIfNullOrEmpty(asfVariant);
+
+		if (string.IsNullOrEmpty(RepositoryName)) {
+			ASF.ArchiLogger.LogGenericError(string.Format(CultureInfo.CurrentCulture, Strings.WarningFailedWithError, nameof(RepositoryName)));
+
+			return null;
+		}
+
+		ReleaseResponse? releaseResponse = await GitHubService.GetLatestRelease(RepositoryName, stable).ConfigureAwait(false);
+
+		if (releaseResponse == null) {
+			return null;
+		}
+
+		Version newVersion = new(releaseResponse.Tag);
+
+		if (!(Version.Major == newVersion.Major && Version.Minor == newVersion.Minor && Version.Build == newVersion.Build) && !(asfUpdate || forced)) {
+			ASF.ArchiLogger.LogGenericInfo(string.Format(CultureInfo.CurrentCulture, "New {0} plugin version {1} is only compatible with latest ASF version", Name, newVersion));
+			return null;
+		}
+
+
+		if (Version >= newVersion & !forced) {
+			ASF.ArchiLogger.LogGenericInfo(string.Format(CultureInfo.CurrentCulture, Strings.PluginUpdateNotFound, Name, Version, newVersion));
+
+			return null;
+		}
+
+		if (releaseResponse.Assets.Count == 0) {
+			ASF.ArchiLogger.LogGenericWarning(string.Format(CultureInfo.CurrentCulture, Strings.PluginUpdateNoAssetFound, Name, Version, newVersion));
+
+			return null;
+		}
+
+		ReleaseAsset? asset = await ((IGitHubPluginUpdates) this).GetTargetReleaseAsset(asfVersion, asfVariant, newVersion, releaseResponse.Assets).ConfigureAwait(false);
+
+		if ((asset == null) || !releaseResponse.Assets.Contains(asset)) {
+			ASF.ArchiLogger.LogGenericWarning(string.Format(CultureInfo.CurrentCulture, Strings.PluginUpdateNoAssetFound, Name, Version, newVersion));
+
+			return null;
+		}
+
+		ASF.ArchiLogger.LogGenericInfo(string.Format(CultureInfo.CurrentCulture, Strings.PluginUpdateFound, Name, Version, newVersion));
+
+		return asset.DownloadURL;
+	}
 
 	private static readonly char[] Separator = [','];
 

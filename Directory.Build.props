@@ -3,15 +3,15 @@
 
 	<PropertyGroup>
 		<PluginName>ASFAchievementManager</PluginName>
-		<Version>1.0.0.0</Version>
+		<Version>1.0.0.1</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>
 		<ApplicationIcon />
 		<Authors>Rudokhvist</Authors>
-		<Company>$(Authors)</Company>
-		<Copyright>Copyright © $([System.DateTime]::UtcNow.Year) $(Company)</Copyright>
-		<Description>$(PluginName)</Description>
+		<Company>CatPoweredPlugins</Company>
+		<Copyright>Copyright © $([System.DateTime]::UtcNow.Year) $(Authors)</Copyright>
+		<Description>$(PluginName) by $(Authors). This plugin is cat powered!</Description>
 		<PackageIcon />
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/$(Company)/$(PluginName)</PackageProjectUrl>
