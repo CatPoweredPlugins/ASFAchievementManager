@@ -59,6 +59,8 @@ jobs:
             exit
         fi
 
+        git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
         git config -f .gitmodules submodule.ArchiSteamFarm.branch "$LATEST_ASF_RELEASE"
 
         git add -A ".gitmodules"
@@ -73,8 +75,4 @@ jobs:
 
         git commit -m "Automatic ArchiSteamFarm reference update to ${LATEST_ASF_RELEASE}"
 
-    - name: Push changes to the repo
-      uses: ad-m/github-push-action@v0.8.0
-      with:
-        github_token: ${{ env.PUSH_GITHUB_TOKEN }}
-        branch: ${{ github.ref }}
+        git push
