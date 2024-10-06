@@ -31,9 +31,8 @@ if ERRORLEVEL 1 (
   copy README.md .\out\%CurrDirName%
   goto zip
 ) else (
-  pandoc  --metadata title="%CurrDirName%" --standalone --embed-resources --columns 2000 -f markdown -t html -c .\github-pandoc.css -o .\out\%CurrDirName%\README.html README.md
+  pandoc  --metadata title="%CurrDirName%" -V title="" --standalone --columns 2000 -f gfm -t html --embed-resources -c https://raw.githubusercontent.com/CatPoweredPlugins/github.css/refs/heads/main/github-pandoc.css -o .\out\%CurrDirName%\README.html README.md
 )
 :zip
 7z a -tzip -mx7 .\out\%CurrDirName%.zip .\out\%CurrDirName%
 rmdir /Q /S out\%CurrDirName%
-
