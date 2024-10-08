@@ -51,4 +51,4 @@ Example:
 `"Rudokhvist.AchievementsCulture":"uk-UA"`
 
 
-![downloads](https://img.shields.io/github/downloads/Rudokhvist/ASF-Achievement-Manager/total.svg?style=social)
+![downloads](https://img.shields.io/github/downloads/CatPoweredPlugins/ASF-Achievement-Manager/total.svg?style=social)
