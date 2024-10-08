@@ -25,7 +25,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4.2.0
+      uses: actions/checkout@v4.2.1
       with:
         show-progress: false
         token: ${{ env.PUSH_GITHUB_TOKEN }}
