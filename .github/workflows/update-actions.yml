@@ -24,14 +24,14 @@ jobs:
 
     steps:
     - name: Checkout plugin code
-      uses: actions/checkout@v4.2.1
+      uses: actions/checkout@v4.2.2
       with:
         show-progress: false
         path: plugin
         token: ${{ env.PUSH_GITHUB_TOKEN }}
 
     - name: Checkout template
-      uses: actions/checkout@v4.2.1
+      uses: actions/checkout@v4.2.2
       with:
         show-progress: false
         repository: JustArchiNET/ASF-PluginTemplate
