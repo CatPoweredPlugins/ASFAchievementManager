@@ -6,7 +6,7 @@ env:
   CONFIGURATION: Release
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_NOLOGO: true
-  DOTNET_SDK_VERSION: 8.0
+  DOTNET_SDK_VERSION: 9.0
   GPG_PRIVATE_KEY: ${{ secrets.ARCHIBOT_GPG_PRIVATE_KEY }} # Optional, if secret not provided, will skip signing SHA512SUMS with GPG key. You can specify your own credentials if you'd like to, simply change ARCHIBOT_GPG_PRIVATE_KEY here to the one you want to use
 
 permissions:
@@ -20,6 +20,7 @@ jobs:
         os: [macos-latest, ubuntu-latest, windows-latest]
 
     runs-on: ${{ matrix.os }}
+
     outputs:
       PLUGIN_NAME: ${{ steps.plugin-name.outputs.info }}
 
@@ -30,13 +31,6 @@ jobs:
         show-progress: false
         submodules: recursive
 
-    - name: Parse plugin name from Directory.Build.props
-      id: plugin-name
-      uses: mavrosxristoforos/get-xml-info@2.0
-      with:
-        xml-file: 'Directory.Build.props'
-        xpath: '//PluginName'
-
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v4.1.0
       with:
@@ -44,6 +38,13 @@ jobs:
 
     - name: Verify .NET Core
       run: dotnet --info
+
+    - name: Parse plugin name from Directory.Build.props
+      id: plugin-name
+      uses: mavrosxristoforos/get-xml-info@2.0
+      with:
+        xml-file: 'Directory.Build.props'
+        xpath: '//PluginName'
 
     - name: Publish plugin on Unix
       if: startsWith(matrix.os, 'macos-') || startsWith(matrix.os, 'ubuntu-')
