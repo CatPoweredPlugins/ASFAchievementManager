@@ -101,6 +101,7 @@ internal sealed class ASFAchievementManager : IBotSteamClient, IBotCommand2, IAS
 					"ASET" when args.Length > 2 => await ResponseAchievementSet(access, bot, args[1], Utilities.GetArgsAsText(args, 2, ","), true).ConfigureAwait(false),
 					"ARESET" when args.Length > 3 => await ResponseAchievementSet(access, steamID, args[1], args[2], Utilities.GetArgsAsText(args, 3, ","), false).ConfigureAwait(false),
 					"ARESET" when args.Length > 2 => await ResponseAchievementSet(access, bot, args[1], Utilities.GetArgsAsText(args, 2, ","), false).ConfigureAwait(false),
+					 "ASETALL" => await ResponseAchievementSetAll(access, bot).ConfigureAwait(false),
 					_ => null,
 				};
 		}
@@ -225,6 +226,31 @@ internal sealed class ASFAchievementManager : IBotSteamClient, IBotCommand2, IAS
 		List<string?> responses = new(results.Where(result => !string.IsNullOrEmpty(result)));
 
 		return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
+	}
+
+	private static async Task<string?> ResponseAchievementSetAll(EAccess access, Bot bot) {
+		if (access < EAccess.Master) {
+			return null;
+		}
+
+		if (!AchievementHandlers.TryGetValue(bot, out AchievementHandler? achievementHandler)) {
+			return bot.Commands.FormatBotResponse(string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsEmpty, nameof(AchievementHandlers)));
+		}
+
+		if (achievementHandler == null) {
+			bot.ArchiLogger.LogNullError(achievementHandler);
+			return null;
+		}
+
+		List<string> responses = new();
+
+		foreach (uint appId in bot.OwnedGames.Keys) {
+			HashSet<uint> achievements = new();
+			string result = await Task.Run(() => achievementHandler.SetAchievements(bot, appId, achievements, true)).ConfigureAwait(false);
+			responses.Add(result);
+		}
+
+		return bot.Commands.FormatBotResponse(string.Join(Environment.NewLine, responses));
 	}
 
 	public Task OnASFInit(IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
