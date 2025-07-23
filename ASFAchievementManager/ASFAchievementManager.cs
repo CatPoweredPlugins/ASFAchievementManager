@@ -91,6 +91,7 @@ internal sealed class ASFAchievementManager : IBotSteamClient, IBotCommand2, IAS
 				return null;
 			case 1:
 				return args[0].ToUpperInvariant() switch {
+					"COMMANDS" => Name + "\n\nALIST [<bots>] <appids>\nASET [<bots>] <appid> <achievements/*>\nARESET [<bots>] <appid> <achievements/*>",
 					_ => null,
 				};
 			default:
