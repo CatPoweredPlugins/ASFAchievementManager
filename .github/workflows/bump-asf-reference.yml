@@ -25,21 +25,21 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4.2.2
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
         show-progress: false
         token: ${{ env.PUSH_GITHUB_TOKEN }}
 
     - name: Fetch latest ArchiSteamFarm release
       id: asf-release
-      uses: rez0n/actions-github-release@v2.0
+      uses: rez0n/actions-github-release@27a57820ee808f8fd940c8a9d1f7188f854aa2b5 # v2.0
       env:
         repository: JustArchiNET/ArchiSteamFarm
         token: ${{ secrets.GITHUB_TOKEN }}
         type: ${{ env.RELEASE_TYPE }}
 
     - name: Import GPG key for signing
-      uses: crazy-max/ghaction-import-gpg@v6.3.0
+      uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
       if: ${{ env.GPG_PRIVATE_KEY != null }}
       with:
         gpg_private_key: ${{ env.GPG_PRIVATE_KEY }}
