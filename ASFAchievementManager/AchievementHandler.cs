@@ -85,7 +85,8 @@ public sealed class AchievementHandler : ClientMsgHandler {
 
 			//first we enumerate all real achievements
 			foreach (KeyValue stat in keyValues.Children.Find(child => child.Name == "stats")?.Children ?? []) {
-				if (stat.Children.Find(child => child.Name == "type")?.Value == "4") {
+				string? childTypeValue = stat.Children.Find(child => child.Name == "type")?.Value?.ToUpperInvariant();
+				if (childTypeValue == "4" || childTypeValue == "ACHIEVEMENTS") {
 					foreach (KeyValue achievement in stat.Children.Find(child => child.Name == "bits")?.Children ?? []) {
 						if (int.TryParse(achievement.Name, out int bitNum)) {
 							if (uint.TryParse(stat.Name, out uint statNum)) {
