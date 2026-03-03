@@ -39,7 +39,7 @@ jobs:
         type: ${{ env.RELEASE_TYPE }}
 
     - name: Import GPG key for signing
-      uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
+      uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
       if: ${{ env.GPG_PRIVATE_KEY != null }}
       with:
         gpg_private_key: ${{ env.GPG_PRIVATE_KEY }}
