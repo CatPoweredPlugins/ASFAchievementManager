@@ -41,7 +41,7 @@ jobs:
 
     - name: Parse plugin name from Directory.Build.props
       id: plugin-name
-      uses: mavrosxristoforos/get-xml-info@d4791bc1e5928088858438ef383383f431983475 # 2.2.0
+      uses: mavrosxristoforos/get-xml-info@219e509082288b248df8a825f6c9abb323ef4e06 # 2.2.1
       with:
         xml-file: 'Directory.Build.props'
         xpath: '//PluginName'
