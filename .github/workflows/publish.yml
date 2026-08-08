@@ -1,6 +1,6 @@
 name: Plugin-publish
 
-on: [push, pull_request]
+on: [pull_request, push, workflow_dispatch]
 
 env:
   CONFIGURATION: Release
@@ -137,7 +137,7 @@ jobs:
         path: out/${{ steps.plugin-name.outputs.info }}.zip
 
   release:
-    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+    if: ${{ github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/') }}
     needs: publish
     runs-on: ubuntu-latest
 
